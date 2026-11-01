@@ -1,0 +1,3 @@
+{"manifest_version":3,"name":"TraceShield","version":"0.1.0","description":"Local-only harassment pattern detection, enabled with your permission.",
+"permissions":["storage","scripting"],"optional_host_permissions":["https://www.instagram.com/*"],
+"action":{"default_popup":"popup.html","default_title":"TraceShield"}}

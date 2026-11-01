@@ -1,0 +1,51 @@
+[
+ {
+  "label": "explicit_threat",
+  "severity": 3,
+  "role": "sender",
+  "pattern": "i will (kill you|hurt you|find you)|dekh lunga|maar dunga|jaan se|chhodunga nahi",
+  "meaning": "Direct threat of harm"
+ },
+ {
+  "label": "reputation_threat",
+  "severity": 3,
+  "role": "sender",
+  "pattern": "(sabko|sab ko) bata dun|viral kar|leak|everyone will know|badnaam|screenshots?.{0,25}(share|viral|bhej)",
+  "meaning": "Threatens exposure or shame"
+ },
+ {
+  "label": "veiled_threat",
+  "severity": 2,
+  "role": "sender",
+  "pattern": "warna jo hoga|dekh lena|tum pachta|you.?ll regret|see what happens|don.?t make me|anjaam|majboor mat kar",
+  "meaning": "Implies consequences while avoiding an explicit threat"
+ },
+ {
+  "label": "surveillance",
+  "severity": 2,
+  "role": "sender",
+  "pattern": "i saw you|saw you at|you were wearing|maine dekha|dekha tumhe|kahan thi|kahan the tum|i.?m outside|outside your|tumhare ghar|i know where you|pata hai tum",
+  "meaning": "Shows the sender is tracking the recipient’s movements"
+ },
+ {
+  "label": "ownership",
+  "severity": 1,
+  "role": "sender",
+  "pattern": "tum (sirf )?meri ho|sirf meri|you.?re mine|only mine|kisi aur se baat|mere alawa",
+  "meaning": "Treats the recipient as a possession"
+ },
+ {
+  "label": "guilt_trip",
+  "severity": 1,
+  "role": "sender",
+  "pattern": "why are you ignor|why ignor|maine kya galat|after all i|you owe me|reply karo|answer me|tumne mujhe dhoka|mar jaunga|i will die|hurt myself",
+  "meaning": "Pressures through guilt or emotional blackmail"
+ },
+ {
+  "label": "refusal",
+  "severity": 0,
+  "role": "recipient",
+  "pattern": "leave me alone|stop (messaging|texting|calling|contacting)|i need (some )?(time|space)|not interested|don.?t (message|text|call|contact)|please stop|mujhe (time|space) chahiye|baat mat karo|pareshan mat karo|mujhe baat nahi karni",
+  "meaning": "Clear request to stop or pause contact"
+ }
+]

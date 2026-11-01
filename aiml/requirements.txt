@@ -1,0 +1,6 @@
+# Optional extras. The core engine needs only the standard library.
+scikit-learn
+detoxify
+sentence-transformers
+chromadb
+google-generativeai

@@ -1,0 +1,47 @@
+[
+ {
+  "sender": "Rahul",
+  "ts": "2026-10-28T18:05:00",
+  "text": "hey Priya, free this weekend?"
+ },
+ {
+  "sender": "Priya",
+  "ts": "2026-10-28T18:40:00",
+  "text": "Sorry Rahul, I need some time. Please stop messaging me."
+ },
+ {
+  "sender": "Rahul",
+  "ts": "2026-10-28T23:41:00",
+  "text": "Why are you ignoring me? Maine kya galat kiya?"
+ },
+ {
+  "sender": "Rahul",
+  "ts": "2026-10-29T01:15:00",
+  "text": "Saw you at the library today, nice blue kurta"
+ },
+ {
+  "sender": "Rahul",
+  "ts": "2026-10-29T01:52:00",
+  "text": "tum sirf meri ho, kisi aur se baat mat karna"
+ },
+ {
+  "sender": "Priya",
+  "ts": "2026-10-29T09:10:00",
+  "text": "Please leave me alone."
+ },
+ {
+  "sender": "Rahul",
+  "ts": "2026-10-29T22:30:00",
+  "text": "Reply karo Priya. Answer me."
+ },
+ {
+  "sender": "Rahul",
+  "ts": "2026-10-30T02:03:00",
+  "text": "warna jo hoga uski zimmedari meri nahi"
+ },
+ {
+  "sender": "Rahul",
+  "ts": "2026-10-30T02:20:00",
+  "text": "Sabko bata dunga, saare screenshots viral kar dunga"
+ }
+]

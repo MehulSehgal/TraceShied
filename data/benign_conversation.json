@@ -1,0 +1,27 @@
+[
+ {
+  "sender": "Aman",
+  "ts": "2026-10-28T20:00:00",
+  "text": "bro movie tonight?"
+ },
+ {
+  "sender": "Neha",
+  "ts": "2026-10-28T20:05:00",
+  "text": "cannot tonight, exam tomorrow"
+ },
+ {
+  "sender": "Aman",
+  "ts": "2026-10-28T20:07:00",
+  "text": "no worries, next weekend then?"
+ },
+ {
+  "sender": "Neha",
+  "ts": "2026-10-28T20:09:00",
+  "text": "sure! pick the film this time"
+ },
+ {
+  "sender": "Aman",
+  "ts": "2026-10-28T20:10:00",
+  "text": "haha deal. good luck for the exam!"
+ }
+]
