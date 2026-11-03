@@ -67,11 +67,14 @@ No network calls, no server, no accounts. Messages stay in memory. See `extensio
 ## Evaluation
 
 ```bash
-pip install scikit-learn            # add detoxify for the real baseline
-python eval/run_eval.py eval/dataset.sample.jsonl --split test
+python eval/run_eval.py eval/dataset.pilot.jsonl --split dev
 ```
 
-`eval/dataset.sample.jsonl` has 8 hand-written conversations only to show the format. It was written alongside the rules, so its scores are **not** a result. For real numbers build 100+ labeled conversations (40+ benign, 40+ Hinglish), split roughly 70/30 into development and held-out test, never tune on the test set, and report failure cases. Run the Hinglish subset with and without the knowledge base for an ablation.
+The evaluation command requires exactly one split (`dev` or `test`) and never combines them. Ground-truth positive means the conversation label is `harassment_pattern`; TraceShield predicted positive means its risk level is `High` or `Elevated`. The report gives TP (harassing conversations correctly flagged), TN (benign conversations correctly left unflagged), FP (benign conversations incorrectly flagged), and FN (harassing conversations missed), along with precision, recall, and F1 for TraceShield and the single-message baseline. If the requested split has no samples or a dataset row is invalid, the command exits with an error.
+
+Each JSONL line represents one conversation and uses the fields `id`, `label` (`harassment_pattern` or `benign`), `lang` (`en` or `hinglish`), `split` (`dev` or `test`), and `messages`. Optional metadata such as `case_type`, `origin`, and `annotation_status` is retained in the JSONL but ignored by the current evaluator.
+
+`eval/dataset.sample.jsonl` contains eight illustrative hand-written conversations created alongside the rules. `eval/dataset.pilot.jsonl` contains 20 synthetic conversations, all assigned to the development split. Its labels and rationales are provisional and have not been independently reviewed. The pilot and sample data are not independent or representative evaluation sets; results from them cannot establish detection accuracy or be presented as validated results. Use the pilot only to exercise development-time tooling. See `eval/DATASET_ANNOTATION_GUIDELINES.md` for its limitations and the proposed human review process.
 
 ## Privacy and safety
 
