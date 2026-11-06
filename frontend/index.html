@@ -44,6 +44,11 @@ pre{white-space:pre-wrap;background:var(--bg);border:1px solid var(--bd);border-
 .sig b{display:block;font-size:20px}.sig span{font-size:13px;color:var(--mut)}
 .pts{color:var(--el);font-weight:700}
 .chart{overflow-x:auto}.chart svg{max-width:100%;height:auto}
+.replay-chart{max-width:460px;margin-top:8px}.replay-chart svg{display:block;width:100%;height:auto}
+.replay-legend{display:flex;flex-wrap:wrap;gap:12px;margin-top:6px;font-size:12px;color:var(--mut)}
+.replay-legend span{display:inline-flex;align-items:center;gap:5px}
+.replay-legend i{display:inline-block;width:18px;border-top:3px solid var(--acc)}
+.replay-legend .detox-line{border-color:var(--hi)}
 .msg{border:1px solid var(--bd);border-left:5px solid var(--bd);border-radius:10px;padding:8px 12px;margin-bottom:8px;background:var(--bg)}
 .msg.flag{background:var(--card)}
 .mh{display:flex;flex-wrap:wrap;gap:8px;align-items:center;font-size:13px;color:var(--mut)}
@@ -167,6 +172,18 @@ ol{padding-left:20px;margin:6px 0 0;font-size:14px}
 <section class="card" id="why-card"><h2>Why this was flagged</h2><div id="why"></div></section>
 <section class="card" id="timeline"><h2>Severity timeline</h2><div class="chart" id="chart"></div>
   <div class="mut">Click a bar to jump to its message. Bar height is severity (0 to 3). ☾ marks messages sent between 00:00 and 04:59. The dashed line marks the first refusal.</div></section>
+<section class="card" id="replay-card">
+  <div class="row" style="margin-top:0">
+    <button class="p" id="replay-start">Replay the escalation</button>
+    <button id="replay-pause" hidden>Pause</button>
+    <button id="replay-reset" hidden>Reset</button>
+    <span class="mut" id="replay-status" aria-live="polite"></span>
+  </div>
+  <div id="replay-viz" hidden>
+    <div class="replay-chart" id="replay-chart"></div>
+    <div class="replay-legend"><span><i></i>TraceShield cumulative score (0-9)</span><span><i class="detox-line"></i>Detoxify highest score so far</span></div>
+  </div>
+</section>
 <section class="card" id="transcript"><h2>Transcript with baseline comparison</h2><div class="mut" id="cmp"></div><label class="mut tgl"><input type="checkbox" id="onlyf"> Show flagged messages only</label><div id="tr" style="margin-top:10px"></div></section>
 <section class="card" id="report-card"><h2>Evidence report</h2>
   <div class="row" style="margin:0 0 12px"><button class="p" id="prt">Print / Save as PDF</button><span class="mut">Prints only the report below.</span></div>
@@ -305,8 +322,109 @@ async function analyze(){
  <h3>What this report is and is not</h3><div>An automated risk assessment to help organize evidence for review. It is not a legal verdict and does not replace professional or legal advice.</div>`;
  if(S.scroll){S.scroll=false;$('sum').scrollIntoView({behavior:'smooth',block:'start'})}
 }
+let replayTimer=null,replayRun=0,replayMessages=[],replayIndex=0,replayPaused=false,replayBusy=false,replayScores=[],replayDetox=[],replayAnalysis=Promise.resolve();
+function clearReplayTimer(){if(replayTimer!==null){clearTimeout(replayTimer);replayTimer=null}}
+function cancelReplay(){
+ clearReplayTimer();replayRun++;replayMessages=[];replayIndex=0;replayPaused=false;replayBusy=false;replayScores=[];replayDetox=[];
+ $('replay-start').disabled=false;$('replay-pause').hidden=true;$('replay-reset').hidden=true;
+ $('replay-viz').hidden=true;$('replay-chart').replaceChildren();$('replay-status').textContent='';
+}
+function analyzeReplay(messages){
+ const result=replayAnalysis.then(()=>{S.msgs=messages;return analyze()});
+ replayAnalysis=result.catch(()=>{});
+ return result;
+}
+function drawReplayChart(){
+ const count=replayScores.length,allDetox=replayMessages.slice(0,count).every(m=>m.base!==null);
+ const x=i=>count===1?210:26+i*368/(count-1),y=score=>116-score*98;
+ const tracePoints=replayScores.map((score,i)=>`${x(i)},${y(score/9)}`).join(' ');
+ const detoxPoints=allDetox?replayDetox.map((score,i)=>`${x(i)},${y(score)}`).join(' '):'';
+ const traceMarks=replayScores.map((score,i)=>`<circle cx="${x(i)}" cy="${y(score/9)}" r="3" fill="var(--acc)"/>`).join('');
+ const detoxMarks=allDetox?replayDetox.map((score,i)=>`<circle cx="${x(i)}" cy="${y(score)}" r="3" fill="var(--hi)"/>`).join(''):'';
+ let svg='<svg viewBox="0 0 420 150" role="img" aria-label="Cumulative TraceShield and Detoxify scores on a zero to one scale">';
+ [18,67,116].forEach((line,i)=>{svg+=`<line x1="26" y1="${line}" x2="394" y2="${line}" stroke="var(--bd)"/>`;svg+=`<text x="21" y="${line+4}" text-anchor="end" font-size="10" fill="var(--mut)">${1-i*.5}</text>`});
+ svg+='<line x1="26" y1="18" x2="26" y2="116" stroke="var(--mut)"/>';
+ if(tracePoints)svg+=`<polyline points="${tracePoints}" fill="none" stroke="var(--acc)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>${traceMarks}`;
+ if(detoxPoints)svg+=`<polyline points="${detoxPoints}" fill="none" stroke="var(--hi)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>${detoxMarks}`;
+ svg+='</svg>';
+ $('replay-chart').innerHTML=svg+(allDetox?'':'<div class="mut">Detoxify line hidden because at least one message has no DETOX score.</div>');
+}
+function finishReplay(run){
+ if(run!==replayRun)return;
+ clearReplayTimer();replayPaused=false;replayBusy=false;
+ $('replay-start').disabled=false;$('replay-pause').hidden=true;$('replay-reset').hidden=false;
+ $('replay-status').textContent=`Replay complete: ${replayMessages.length} messages.`;
+}
+function revealReplayMessage(run){
+ if(run!==replayRun||replayPaused)return;
+ if(replayIndex>=replayMessages.length){finishReplay(run);return}
+ replayBusy=true;
+ analyzeReplay(replayMessages.slice(0,replayIndex+1)).then(()=>{
+  if(run!==replayRun)return;
+  replayBusy=false;
+  replayScores.push(S.score);
+  const known=replayMessages[replayIndex].base;
+  replayDetox.push(Math.max(known,...replayDetox));
+  replayIndex++;
+  $('replay-viz').hidden=false;drawReplayChart();
+  $('replay-status').textContent=`Showing ${replayIndex} of ${replayMessages.length} messages.`;
+  if(replayIndex===replayMessages.length)finishReplay(run);
+  else if(!replayPaused)replayTimer=setTimeout(()=>revealReplayMessage(run),700);
+ }).catch(error=>{
+  if(run!==replayRun)return;
+  clearReplayTimer();replayPaused=false;replayBusy=false;
+  $('replay-start').disabled=false;$('replay-pause').hidden=true;
+  $('replay-status').textContent=`Replay stopped: ${error.message}`;
+ });
+}
+function startReplay(){
+ if(!S.msgs.length)return;
+ clearReplayTimer();const run=++replayRun;
+ replayMessages=S.msgs.slice();replayIndex=0;replayPaused=false;replayBusy=false;replayScores=[];replayDetox=[];
+ $('replay-start').disabled=true;
+ $('tr').replaceChildren();$('onlyf').checked=false;$('tr').classList.remove('only');
+ $('replay-viz').hidden=false;$('replay-chart').replaceChildren();
+ $('replay-pause').hidden=false;$('replay-pause').textContent='Pause';$('replay-reset').hidden=false;
+ $('replay-status').textContent=`Starting replay: ${replayMessages.length} messages.`;
+ if(window.matchMedia('(prefers-reduced-motion: reduce)').matches){
+  const showFinal=async()=>{
+   for(let i=0;i<replayMessages.length;i++){
+    replayBusy=true;await analyzeReplay(replayMessages.slice(0,i+1));
+    if(run!==replayRun)return;
+    replayBusy=false;
+    replayScores.push(S.score);
+    replayDetox.push(Math.max(replayMessages[i].base,...replayDetox));
+   }
+   S.msgs=replayMessages.slice();drawReplayChart();finishReplay(run);
+  };
+  showFinal().catch(error=>{if(run===replayRun){replayBusy=false;$('replay-start').disabled=false;$('replay-pause').hidden=true;$('replay-status').textContent=`Replay stopped: ${error.message}`}});
+ }else replayTimer=setTimeout(()=>revealReplayMessage(run),700);
+}
+async function resetReplay(){
+ const run=++replayRun,messages=replayMessages.slice();clearReplayTimer();replayPaused=false;replayBusy=false;
+ $('replay-start').disabled=true;
+ $('replay-pause').hidden=true;$('replay-reset').hidden=true;$('replay-viz').hidden=true;
+ $('replay-chart').replaceChildren();$('replay-status').textContent='';
+ if(messages.length){
+  try{await analyzeReplay(messages)}
+  catch(error){if(run===replayRun){$('replay-start').disabled=false;$('replay-status').textContent=`Reset failed: ${error.message}`}return}
+ }
+ if(run!==replayRun)return;
+ replayMessages=[];replayScores=[];replayDetox=[];replayIndex=0;
+ $('replay-start').disabled=false;
+}
+function toggleReplayPause(){
+ if(replayIndex>=replayMessages.length)return;
+ replayPaused=!replayPaused;
+ $('replay-pause').textContent=replayPaused?'Resume':'Pause';
+ if(replayPaused)clearReplayTimer();
+ else if(!replayBusy)replayTimer=setTimeout(()=>revealReplayMessage(replayRun),700);
+}
 document.addEventListener('click',e=>{const a=e.target.closest('[data-id]');if(!a)return;const el=$('m'+a.dataset.id);if(!el)return;$('onlyf').checked=false;$('tr').classList.remove('only');el.scrollIntoView({behavior:'smooth',block:'center'});el.classList.remove('pulse');void el.offsetWidth;el.classList.add('pulse')});
 $('onlyf').onchange=e=>$('tr').classList.toggle('only',e.target.checked);
+$('replay-start').onclick=startReplay;
+$('replay-pause').onclick=toggleReplayPause;
+$('replay-reset').onclick=resetReplay;
 let liveT=null;
 const LC={High:'var(--hi)',Elevated:'var(--el)',Low:'var(--lo)'};
 $('lv-stop').onclick=()=>{clearInterval(liveT);$('lc').innerHTML='<span class="mut">Messages will appear here as they arrive.</span>';$('lv').textContent='Not monitoring';$('lv').style.color='var(--mut)';$('lva').hidden=true;$('lv-err').textContent='';$('clr').click()};
@@ -334,7 +452,7 @@ $('d1').onclick=()=>{$('inp').value=D1;run()};
 $('d2').onclick=()=>{$('inp').value=D2;run()};
 $('me').onchange=e=>{S.me=e.target.value;analyze()};
 $('prt').onclick=()=>window.print();
-$('clr').onclick=()=>{$('inp').value='';$('res').hidden=true;$('result-nav').hidden=true;$('file').value='';$('ppre').textContent='';$('pcount').textContent='Nothing analyzed yet.';$('me').innerHTML='<option>(analyze first)</option>';S={msgs:[],me:'',raw:''}};
+$('clr').onclick=async()=>{cancelReplay();await replayAnalysis;$('inp').value='';$('res').hidden=true;$('result-nav').hidden=true;$('file').value='';$('ppre').textContent='';$('pcount').textContent='Nothing analyzed yet.';$('me').innerHTML='<option>(analyze first)</option>';S={msgs:[],me:'',raw:''}};
 $('file').onchange=async e=>{const f=e.target.files[0];if(!f)return;try{const msgs=load(parseIG(JSON.parse(await f.text())));if(!msgs.length)throw 0;$('inp').value=msgs.map(m=>`[${m.ts.getFullYear()}-${String(m.ts.getMonth()+1).padStart(2,'0')}-${String(m.ts.getDate()).padStart(2,'0')} ${String(m.ts.getHours()).padStart(2,'0')}:${String(m.ts.getMinutes()).padStart(2,'0')}] ${m.sender}: ${m.text.replace(/\n/g,' ')}`).join('\n');run()}catch(x){alert('Could not read that file. Use a message_1.json from the Instagram export.')}};
 </script>
 </body>
