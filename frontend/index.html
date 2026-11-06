@@ -4,6 +4,10 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>TraceShield: trace the pattern, shield the person</title>
+<meta name="description" content="TraceShield analyzes chat patterns locally in your browser and provides an evidence report.">
+<meta property="og:title" content="TraceShield: trace the pattern, shield the person">
+<meta property="og:description" content="A local chat risk assessment prototype using rules and a Hinglish knowledge base.">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='90'%3E%F0%9F%9B%A1%EF%B8%8F%3C/text%3E%3C/svg%3E">
 <style>
 :root{--bg:#f4f7fb;--card:#fff;--fg:#0f172a;--mut:#56657c;--bd:#d9e1ec;--acc:#0d9488;--hi:#e11d48;--el:#d97706;--lo:#16a34a;color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
 @media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#0b1220;--card:#16233b;--fg:#f1f5f9;--mut:#a9b8cf;--bd:#27385a;--acc:#2dd4bf;--hi:#fb7185;--el:#fbbf24;--lo:#4ade80;color-scheme:dark}}
@@ -18,10 +22,17 @@ h1 small{display:block;font:400 14px system-ui,sans-serif;color:var(--mut);margi
 h2{margin:0 0 10px;font-size:17px}
 .pill{border:1px solid var(--acc);color:var(--acc);border-radius:99px;padding:4px 12px;font-size:13px;font-weight:600}
 .card{background:var(--card);border:1px solid var(--bd);border-radius:14px;padding:16px;margin-bottom:16px}
+.result-nav{position:sticky;top:env(safe-area-inset-top,0px);z-index:10;display:flex;gap:8px;overflow-x:auto;white-space:nowrap;background:var(--card);border:1px solid var(--bd);border-radius:14px;padding:8px;margin-bottom:16px}
+.result-nav[hidden]{display:none}
+.result-nav a{flex:0 0 auto;border:1px solid var(--bd);border-radius:99px;padding:4px 12px;color:var(--fg);font-size:14px;font-weight:600;text-decoration:none}
+.result-nav a:hover{border-color:var(--acc);color:var(--acc)}
+#sum,#why-card,#timeline,#transcript,#report-card{scroll-margin-top:calc(64px + env(safe-area-inset-top,0px))}
 textarea{width:100%;min-height:150px;background:var(--bg);color:var(--fg);border:1px solid var(--bd);border-radius:10px;padding:10px;font:14px/1.4 ui-monospace,Menlo,Consolas,monospace;resize:vertical}
 .row{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-top:10px}
 button,select{font:600 14px system-ui,sans-serif;border-radius:10px;border:1px solid var(--bd);background:var(--card);color:var(--fg);padding:9px 14px;cursor:pointer}
+button{min-height:44px}
 button.p{background:var(--acc);border-color:var(--acc);color:#04201c}
+button:focus-visible,a:focus-visible,input:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
 button:hover{filter:brightness(1.08)}
 .mut{color:var(--mut);font-size:14px}
 details{margin-top:10px}summary{cursor:pointer;font-weight:600;font-size:14px}
@@ -32,7 +43,12 @@ pre{white-space:pre-wrap;background:var(--bg);border:1px solid var(--bd);border-
 .sig div{background:var(--bg);border:1px solid var(--bd);border-radius:10px;padding:10px}
 .sig b{display:block;font-size:20px}.sig span{font-size:13px;color:var(--mut)}
 .pts{color:var(--el);font-weight:700}
-.chart{overflow-x:auto}
+.chart{overflow-x:auto}.chart svg{max-width:100%;height:auto}
+.replay-chart{max-width:460px;margin-top:8px}.replay-chart svg{display:block;width:100%;height:auto}
+.replay-legend{display:flex;flex-wrap:wrap;gap:12px;margin-top:6px;font-size:12px;color:var(--mut)}
+.replay-legend span{display:inline-flex;align-items:center;gap:5px}
+.replay-legend i{display:inline-block;width:18px;border-top:3px solid var(--acc)}
+.replay-legend .detox-line{border-color:var(--hi)}
 .msg{border:1px solid var(--bd);border-left:5px solid var(--bd);border-radius:10px;padding:8px 12px;margin-bottom:8px;background:var(--bg)}
 .msg.flag{background:var(--card)}
 .mh{display:flex;flex-wrap:wrap;gap:8px;align-items:center;font-size:13px;color:var(--mut)}
@@ -43,6 +59,7 @@ pre{white-space:pre-wrap;background:var(--bg);border:1px solid var(--bd);border-
 ul{margin:6px 0 0;padding-left:20px}
 #report{background:#fff;color:#111;border:1px solid #ccd;border-radius:10px;padding:20px;font-size:14px}
 #report h3{margin:14px 0 6px;font-size:15px}#report table{border-collapse:collapse;width:100%}
+#report .table-scroll{overflow-x:auto}
 #report td,#report th{border:1px solid #ccd;padding:4px 8px;text-align:left;vertical-align:top}
 .sm{font-size:12px;word-break:break-all}
 footer{color:var(--mut);font-size:13px;text-align:center;margin-top:20px}
@@ -66,7 +83,7 @@ button.p{background:linear-gradient(135deg,#0f766e,#4f46e5);border:0;color:#fff;
 #d1{border-color:var(--hi);color:var(--hi)}#d2{border-color:var(--lo);color:var(--lo)}
 textarea:focus,select:focus{outline:2px solid var(--acc);outline-offset:1px}
 #res .card{animation:up .45s ease both}@keyframes up{from{opacity:0;transform:translateY(12px)}}
-@media (prefers-reduced-motion:reduce){#res .card{animation:none}}
+@media (prefers-reduced-motion:reduce){*,*::before,*::after{animation:none!important;transition:none!important;scroll-behavior:auto!important}}
 .top{gap:24px}.gauge{width:190px;flex:none}
 .badge{font-size:30px;border-width:0;padding:0}
 .sig{grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:12px;margin-top:18px}
@@ -115,14 +132,9 @@ ol{padding-left:20px;margin:6px 0 0;font-size:14px}
   <span class="pill">Runs in your browser. Nothing is uploaded.</span>
 </header>
 
-<section class="card">
-  <h2>Live monitor: detection with your permission</h2>
-  <div class="mut">The Chrome extension reads messages on screen only after you agree and approve the browser prompt. This demo shows the same flow with a sample chat. Everything runs in this tab. Nothing is uploaded.</div>
-  <label class="cons" style="margin-top:10px"><input type="checkbox" id="lv-consent"><span>I allow TraceShield to read the messages in this demo chat and analyze them on this device.</span></label>
-  <div class="row"><button class="p" id="lv-start">Start live monitoring</button><button id="lv-stop">Stop and clear</button><span class="lvp" id="lv" style="color:var(--mut)">Not monitoring</span><span class="err" id="lv-err" role="alert"></span></div>
-  <div class="lc" id="lc" style="margin-top:12px"><span class="mut">Messages will appear here as they arrive.</span></div>
-  <div class="lva" id="lva" hidden></div>
-</section>
+<nav class="result-nav" id="result-nav" aria-label="Analysis results" hidden>
+  <a href="#sum">Result</a><a href="#why-card">Why flagged</a><a href="#timeline">Timeline</a><a href="#transcript">Transcript</a><a href="#report-card">Report</a>
+</nav>
 
 <section class="card">
   <h2>1. Add a conversation</h2>
@@ -139,23 +151,45 @@ ol{padding-left:20px;margin:6px 0 0;font-size:14px}
 </section>
 
 <section class="card">
+  <h2>Simulated live monitor (demo)</h2>
+  <div class="mut">The Chrome extension reads messages on screen only after you agree and approve the browser prompt. This demo shows the same flow with a sample chat. Everything runs in this tab. Nothing is uploaded.</div>
+  <label class="cons" style="margin-top:10px"><input type="checkbox" id="lv-consent"><span>I allow TraceShield to read the messages in this demo chat and analyze them on this device.</span></label>
+  <div class="row"><button class="p" id="lv-start">Start live monitoring</button><button id="lv-stop">Stop and clear</button><span class="lvp" id="lv" style="color:var(--mut)">Not monitoring</span><span class="err" id="lv-err" role="alert"></span></div>
+  <div class="lc" id="lc" style="margin-top:12px"><span class="mut">Messages will appear here as they arrive.</span></div>
+  <div class="lva" id="lva" hidden></div>
+</section>
+
+<details class="card">
+  <summary>Advanced: optional Python backend (local)</summary>
   <h2>Optional: analyze on the Python backend</h2>
   <div class="mut">Sends the conversation to your own backend (default http://localhost:8000). Start it first: uvicorn backend.app.main:app</div>
   <div class="row"><input id="api-url" value="http://localhost:8000" style="flex:1 1 220px;padding:9px;border-radius:10px;border:1px solid var(--bd);background:var(--bg);color:var(--fg)"><button id="api-go">Analyze with backend</button></div>
   <div id="api-out" class="mut" style="margin-top:10px"></div>
-</section>
+</details>
 
 <div id="res" hidden>
 <section class="card" id="sum"></section>
-<section class="card"><h2>Why this was flagged</h2><div id="why"></div></section>
-<section class="card"><h2>Severity timeline</h2><div class="chart" id="chart"></div>
+<section class="card" id="why-card"><h2>Why this was flagged</h2><div id="why"></div></section>
+<section class="card" id="timeline"><h2>Severity timeline</h2><div class="chart" id="chart"></div>
   <div class="mut">Click a bar to jump to its message. Bar height is severity (0 to 3). ☾ marks messages sent between 00:00 and 04:59. The dashed line marks the first refusal.</div></section>
-<section class="card"><h2>Transcript with baseline comparison</h2><div class="mut" id="cmp"></div><label class="mut tgl"><input type="checkbox" id="onlyf"> Show flagged messages only</label><div id="tr" style="margin-top:10px"></div></section>
-<section class="card"><h2>Evidence report</h2>
+<section class="card" id="replay-card">
+  <div class="row" style="margin-top:0">
+    <button class="p" id="replay-start">Replay the escalation</button>
+    <button id="replay-pause" hidden>Pause</button>
+    <button id="replay-reset" hidden>Reset</button>
+    <span class="mut" id="replay-status" aria-live="polite"></span>
+  </div>
+  <div id="replay-viz" hidden>
+    <div class="replay-chart" id="replay-chart"></div>
+    <div class="replay-legend"><span><i></i>TraceShield cumulative score (0-9)</span><span><i class="detox-line"></i>Detoxify highest score so far</span></div>
+  </div>
+</section>
+<section class="card" id="transcript"><h2>Transcript with baseline comparison</h2><div class="mut" id="cmp"></div><label class="mut tgl"><input type="checkbox" id="onlyf"> Show flagged messages only</label><div id="tr" style="margin-top:10px"></div></section>
+<section class="card" id="report-card"><h2>Evidence report</h2>
   <div class="row" style="margin:0 0 12px"><button class="p" id="prt">Print / Save as PDF</button><span class="mut">Prints only the report below.</span></div>
   <div id="report"></div></section>
 </div>
-<footer>TraceShield gives a risk assessment, not a legal verdict. Prototype tagger: rules plus a Hinglish knowledge base. The full pipeline adds an LLM labeller and vector retrieval.</footer>
+<footer>TraceShield gives a risk assessment, not a legal verdict. This prototype uses rules plus a Hinglish knowledge base. LLM labelling and vector retrieval are optional and not enabled in this demo. Test data is synthetic.</footer>
 </div>
 
 <script>
@@ -174,6 +208,22 @@ const REF=K('refusal',0,"leave me alone|stop (messaging|texting|calling|contacti
 const TH=['veiled_threat','reputation_threat','explicit_threat'];
 const TOX=/idiot|stupid|bitch|bastard|slut|ugly|shut up|hate you|fuck|kutta|kamina|harami|bewakoof|saala|chutiya|gandu/gi;
 const PH=/(\+?\d[\d\s\-]{8,}\d)/g,EM=/[\w.\-]+@[\w\-]+\.\w+/g;
+const DETOX={
+ "hey Priya, free this weekend?":0.001,
+ "Sorry Rahul, I need some time. Please stop messaging me.":0.001,
+ "Why are you ignoring me? Maine kya galat kiya?":0.007,
+ "Saw you at the library today, nice blue kurta":0.012,
+ "tum sirf meri ho, kisi aur se baat mat karna":0.229,
+ "Please leave me alone.":0.003,
+ "Reply karo Priya. Answer me.":0.004,
+ "warna jo hoga uski zimmedari meri nahi":0.173,
+ "Sabko bata dunga, saare screenshots viral kar dunga":0.008,
+ "bro movie tonight?":0.002,
+ "cannot tonight, exam tomorrow":0.001,
+ "no worries, next weekend then?":0.001,
+ "sure! pick the film this time":0.001,
+ "haha deal. good luck for the exam!":0.001
+};
 const D1=`[2026-10-28 18:05] Rahul: hey Priya, free this weekend?
 [2026-10-28 18:40] Priya: Sorry Rahul, I need some time. Please stop messaging me.
 [2026-10-28 23:41] Rahul: Why are you ignoring me? Maine kya galat kiya?
@@ -219,7 +269,7 @@ async function analyze(){
   if(m.sender===me){if(REF.r.test(m.text)){m.label='refusal';m.hits=[REF];if(fr<0)fr=i}}
   else{KB.forEach(k=>{if(k.r.test(m.text))m.hits.push(k)});
    if(m.hits.length){const t=m.hits.reduce((a,b)=>b.s>a.s?b:a);m.label=t.l;m.sev=t.s}}
-  const h=(m.text.match(TOX)||[]).length;m.base=h?Math.min(.95,.45*h+.1):0.02+(m.text.length%5)/100});
+  m.base=Object.prototype.hasOwnProperty.call(DETOX,m.text)?DETOX[m.text]:null});
  M.forEach((m,i)=>{if(fr>=0&&i>fr&&m.sender!==me&&m.label==='neutral'){m.label='contact_after_refusal';m.sev=1}});
  const o=M.filter(m=>m.sender!==me),after=fr>=0?o.filter(m=>m.id>M[fr].id):[];
  const night=o.filter(m=>m.ts.getHours()<5),ns=o.length?night.length/o.length:0;
@@ -229,12 +279,14 @@ async function analyze(){
  const thr=o.filter(m=>m.hits.some(h=>TH.includes(h.l))).map(m=>m.id);
  const P=[['Contact after refusal',after.length+' messages',after.length>=3?2:0],['Night-time share',Math.round(ns*100)+'% of their messages',ns>.3?1:0],['Escalation trend',(slope>=0?'+':'')+slope.toFixed(2)+' per message',slope>.1?1:0],['Surveillance remarks',surv.length?'message '+surv.map(i=>'#'+i).join(', '):'none',surv.length?2:0],['Threats',thr.length?'message '+thr.map(i=>'#'+i).join(', '):'none',thr.length?3:0]];
  const score=P.reduce((a,p)=>a+p[2],0),lvl=score>=5?'High':score>=3?'Elevated':'Low',vc=lvl==='High'?'--hi':lvl==='Elevated'?'--el':'--lo';
- S.level=lvl;S.score=score;const bflag=M.filter(m=>m.base>.5).length,tflag=M.filter(m=>m.sev>=1||m.label==='refusal').length;
+ S.level=lvl;S.score=score;const bflag=M.filter(m=>m.base!==null&&m.base>.5).length,btotal=M.filter(m=>m.base!==null).length,tflag=M.filter(m=>m.sev>=1||m.label==='refusal').length;
  const hash=Array.from(new Uint8Array(await crypto.subtle.digest('SHA-256',new TextEncoder().encode(JSON.stringify(M.map(m=>[m.sender,+m.ts,m.text])))))).map(b=>b.toString(16).padStart(2,'0')).join('');
  const stamp=new Date().toLocaleString();
+ const guide=lvl==='High'?`<div class="card warn" style="margin:12px 0 0"><b>Safety guidance</b><ul><li>Do not delete these messages. Keep the original conversation.</li><li>Tell someone you trust, such as a friend, family member or counselor.</li><li>Consider reporting to your campus committee or local authorities.</li><li>Report the account on the platform. In India you can use the National Cyber Crime Reporting Portal (cybercrime.gov.in) or helpline 1930. Please verify current details.</li></ul></div>`:'';
  // summary
  $('res').hidden=false;
- $('sum').innerHTML=`<div class="rk" style="--rk:var(${vc})"><div class="top"><svg class="gauge" viewBox="0 0 180 112" role="img" aria-label="Risk score ${score} of 9"><path d="M20 92A70 70 0 0 1 160 92" fill="none" stroke-width="14" stroke-linecap="round" style="stroke:var(--bd)"/><path d="M20 92A70 70 0 0 1 160 92" fill="none" stroke-width="14" stroke-linecap="round" opacity="${score?1:0}" style="stroke:var(--rk)" stroke-dasharray="${(score/9*219.9).toFixed(1)} 230"/><text x="90" y="82" text-anchor="middle" font-size="34" font-weight="700" font-family="Georgia,serif" style="fill:var(--fg)">${score}</text><text x="90" y="104" text-anchor="middle" font-size="12" style="fill:var(--mut)">of 9</text></svg><div><div class="badge" style="color:var(--rk)">${lvl} risk</div><div class="hl">${lvl==='High'?'A clear escalating pattern was found. Take it seriously.':lvl==='Elevated'?'Some concerning signals were found. Keep watching.':'No concerning pattern was found in this conversation.'}</div><div class="mut" style="margin-top:6px">Heuristic rule: High at 5 or more, Elevated at 3 or 4</div></div></div>
+ $('result-nav').hidden=false;
+ $('sum').innerHTML=`<div class="rk" style="--rk:var(${vc})"><div class="top"><svg class="gauge" viewBox="0 0 180 112" role="img" aria-label="Risk score ${score} of 9"><path d="M20 92A70 70 0 0 1 160 92" fill="none" stroke-width="14" stroke-linecap="round" style="stroke:var(--bd)"/><path d="M20 92A70 70 0 0 1 160 92" fill="none" stroke-width="14" stroke-linecap="round" opacity="${score?1:0}" style="stroke:var(--rk)" stroke-dasharray="${(score/9*219.9).toFixed(1)} 230"/><text x="90" y="82" text-anchor="middle" font-size="34" font-weight="700" font-family="Georgia,serif" style="fill:var(--fg)">${score}</text><text x="90" y="104" text-anchor="middle" font-size="12" style="fill:var(--mut)">of 9</text></svg><div><div class="badge" style="color:var(--rk)">${lvl} risk</div>${guide}<div class="hl">${lvl==='High'?'A clear escalating pattern was found. Take it seriously.':lvl==='Elevated'?'Some concerning signals were found. Keep watching.':'No concerning pattern was found in this conversation.'}</div><div class="mut" style="margin-top:6px">Heuristic rule: High at 5 or more, Elevated at 3 or 4</div></div></div>
  <div class="sig">${P.map((p,i)=>`<div class="${p[2]?'on':''}"><i>${['↩','☾','↗','◉','⚠'][i]}</i><span>${p[0]}</span><b>${esc(p[1])}</b><em>${p[2]?'+'+p[2]+' pts':'0 pts'}</em></div>`).join('')}</div></div>`;
  // explanation
  const ex=[];
@@ -243,9 +295,8 @@ async function analyze(){
  ex.push(slope>.1?`Severity rises across the conversation (trend ${slope.toFixed(2)} per message).`:'Severity does not show a clear upward trend.');
  if(surv.length)ex.push(`Messages ${surv.map(i=>'#'+i).join(', ')} show surveillance-type remarks.`);
  if(thr.length)ex.push(`Messages ${thr.map(i=>'#'+i).join(', ')} contain threats or pressure to stay silent.`);
- const guide=(surv.length||thr.length)?`<div class="card warn" style="margin:12px 0 0"><b>Safety guidance</b><ul><li>Do not delete these messages. Keep the original conversation.</li><li>Tell someone you trust, such as a friend, family member or counselor.</li><li>Consider reporting to your campus committee or local authorities.</li><li>Report the account on the platform. In India you can use the National Cyber Crime Reporting Portal (cybercrime.gov.in) or helpline 1930. Please verify current details.</li></ul></div>`:'';
  const GUIDE_TXT=(surv.length||thr.length)?'Keep the original messages. Tell someone you trust. Consider reporting to campus or local authorities and to the platform. India: cybercrime.gov.in, helpline 1930 (verify current details).':'No threat or surveillance signals were found. Keep the conversation if the situation changes.';
- $('why').innerHTML=`<ul>${ex.map(e=>`<li>${esc(e).replace(/#(\d+)/g,'<a class="ref" data-id="$1">#$1</a>')}</li>`).join('')}</ul>${guide}<div class="mut" style="margin-top:8px">This is a risk assessment, not a legal verdict.</div>`;
+ $('why').innerHTML=`<ul>${ex.map(e=>`<li>${esc(e).replace(/#(\d+)/g,'<a class="ref" data-id="$1">#$1</a>')}</li>`).join('')}</ul><div class="mut" style="margin-top:8px">This is a risk assessment, not a legal verdict.</div>`;
  // chart
  const W=Math.max(340,M.length*44+30);let sv=`<svg viewBox="0 0 ${W} 160" width="${W}" height="160" role="img" aria-label="Severity per message">`;
  sv+=`<line x1="10" y1="120" x2="${W-10}" y2="120" stroke="#94a3b8"/>`;
@@ -254,8 +305,8 @@ async function analyze(){
   if(m.sender!==me&&m.ts.getHours()<5)sv+=`<text x="${x+14}" y="152" text-anchor="middle" font-size="12" fill="#94a3b8">☾</text>`});
  $('chart').innerHTML=sv+'</svg><div class="lg">'+[...new Set(M.map(m=>m.label))].map(l=>`<span class="chip" style="border-color:${COL[l]};background:${COL[l]}33">${l.replace(/_/g,' ')}</span>`).join('')+'</div>';
  // transcript
- $('cmp').innerHTML=`A simple lexicon baseline (a stand-in for Detoxify) flags <b>${bflag} of ${M.length}</b> messages. TraceShield flags <b>${tflag}</b> and ties them into one pattern.`;
- $('tr').innerHTML=M.map(m=>{const f=m.sev>=1||m.label==='refusal';return `<div id="m${m.id}" class="msg ${f?'flag':''} ${m.sender===me?'me':''}" style="--c:${COL[m.label]}"><div class="mh"><b>#${m.id}</b><span>${m.ts.toLocaleString([], {dateStyle:'medium',timeStyle:'short'})}</span><span>${esc(m.sender)}${m.sender===me?' (you)':''}</span><span class="chip" style="border-color:${COL[m.label]};background:${COL[m.label]}33">${m.label.replace(/_/g,' ')}</span><span class="bs">Baseline <u><s style="width:${Math.round(m.base*100)}%"></s></u> ${m.base.toFixed(2)}</span><span class="bs ts">TraceShield <u><s style="width:${Math.round(m.sev*33.3)}%"></s></u> ${m.sev}/3</span></div><div class="mt">${esc(m.text)}</div>${f&&m.hits.length?`<div class="kb">Knowledge base: ${esc(m.hits.map(h=>h.m).join('; '))}</div>`:''}</div>`}).join('');
+ $('cmp').innerHTML=`Detoxify (precomputed) flagged <b>${bflag} of ${btotal}</b> messages above 0.5. TraceShield flags <b>${tflag}</b> and ties them into one pattern.`;
+ $('tr').innerHTML=M.map(m=>{const f=m.sev>=1||m.label==='refusal';return `<div id="m${m.id}" class="msg ${f?'flag':''} ${m.sender===me?'me':''}" style="--c:${COL[m.label]}"><div class="mh"><b>#${m.id}</b><span>${m.ts.toLocaleString([], {dateStyle:'medium',timeStyle:'short'})}</span><span>${esc(m.sender)}${m.sender===me?' (you)':''}</span><span class="chip" style="border-color:${COL[m.label]};background:${COL[m.label]}33">${m.label.replace(/_/g,' ')}</span><span class="bs">Baseline <u><s style="width:${Math.round(m.base*100)}%"></s></u> ${m.base===null?'—':m.base.toFixed(2)}</span><span class="bs ts">TraceShield <u><s style="width:${Math.round(m.sev*33.3)}%"></s></u> ${m.sev}/3</span></div><div class="mt">${esc(m.text)}</div>${f&&m.hits.length?`<details class="kb"><summary>Why?</summary><div>Knowledge base: ${esc(m.hits.map(h=>h.m).join('; '))}</div></details>`:''}</div>`}).join('');
  // privacy preview
  $('pcount').textContent=`${masked} item(s) masked. This is the text any AI step would receive.`;
  $('ppre').textContent=M.map(m=>`#${m.id} ${m.sender}: ${m.clean}`).join('\n');
@@ -263,16 +314,117 @@ async function analyze(){
  const fl=M.filter(m=>m.sev>=1||m.label==='refusal');
  $('report').innerHTML=`<h2 style="margin:0">TraceShield incident report</h2><div>Risk level: <b>${lvl}</b> (score ${score} of 9)</div>
  <h3>Case summary</h3><div>${M.length} messages from ${M[0].ts.toLocaleString()} to ${M[M.length-1].ts.toLocaleString()}. Recipient: ${esc(me)}.</div>
- <h3>Signals</h3><table><tr><th>Signal</th><th>Value</th><th>Points</th></tr>${P.map(p=>`<tr><td>${p[0]}</td><td>${esc(p[1])}</td><td>${p[2]}</td></tr>`).join('')}</table>
- <h3>Flagged messages</h3><table><tr><th>ID</th><th>Time</th><th>Sender</th><th>Text</th><th>Pattern</th></tr>${fl.map(m=>`<tr><td>${m.id}</td><td>${m.ts.toLocaleString()}</td><td>${esc(m.sender)}</td><td>${esc(m.text)}</td><td>${m.label.replace(/_/g,' ')}</td></tr>`).join('')}</table>
+ <h3>Signals</h3><div class="table-scroll"><table><tr><th>Signal</th><th>Value</th><th>Points</th></tr>${P.map(p=>`<tr><td>${p[0]}</td><td>${esc(p[1])}</td><td>${p[2]}</td></tr>`).join('')}</table></div>
+ <h3>Flagged messages</h3><div class="table-scroll"><table><tr><th>ID</th><th>Time</th><th>Sender</th><th>Text</th><th>Pattern</th></tr>${fl.map(m=>`<tr><td>${m.id}</td><td>${m.ts.toLocaleString()}</td><td>${esc(m.sender)}</td><td>${esc(m.text)}</td><td>${m.label.replace(/_/g,' ')}</td></tr>`).join('')}</table></div>
  <h3>Explanation</h3><ul>${ex.map(e=>`<li>${esc(e)}</li>`).join('')}</ul>
  <h3>Reporting guidance</h3><div>${esc(GUIDE_TXT)}</div>
  <h3>Integrity</h3><div class="sm">SHA-256 of analyzed messages: ${hash}<br>Generated: ${esc(stamp)}<br>Source: pasted text or Instagram export, analyzed locally in the browser.</div>
  <h3>What this report is and is not</h3><div>An automated risk assessment to help organize evidence for review. It is not a legal verdict and does not replace professional or legal advice.</div>`;
  if(S.scroll){S.scroll=false;$('sum').scrollIntoView({behavior:'smooth',block:'start'})}
 }
+let replayTimer=null,replayRun=0,replayMessages=[],replayIndex=0,replayPaused=false,replayBusy=false,replayScores=[],replayDetox=[],replayAnalysis=Promise.resolve();
+function clearReplayTimer(){if(replayTimer!==null){clearTimeout(replayTimer);replayTimer=null}}
+function cancelReplay(){
+ clearReplayTimer();replayRun++;replayMessages=[];replayIndex=0;replayPaused=false;replayBusy=false;replayScores=[];replayDetox=[];
+ $('replay-start').disabled=false;$('replay-pause').hidden=true;$('replay-reset').hidden=true;
+ $('replay-viz').hidden=true;$('replay-chart').replaceChildren();$('replay-status').textContent='';
+}
+function analyzeReplay(messages){
+ const result=replayAnalysis.then(()=>{S.msgs=messages;return analyze()});
+ replayAnalysis=result.catch(()=>{});
+ return result;
+}
+function drawReplayChart(){
+ const count=replayScores.length,allDetox=replayMessages.slice(0,count).every(m=>m.base!==null);
+ const x=i=>count===1?210:26+i*368/(count-1),y=score=>116-score*98;
+ const tracePoints=replayScores.map((score,i)=>`${x(i)},${y(score/9)}`).join(' ');
+ const detoxPoints=allDetox?replayDetox.map((score,i)=>`${x(i)},${y(score)}`).join(' '):'';
+ const traceMarks=replayScores.map((score,i)=>`<circle cx="${x(i)}" cy="${y(score/9)}" r="3" fill="var(--acc)"/>`).join('');
+ const detoxMarks=allDetox?replayDetox.map((score,i)=>`<circle cx="${x(i)}" cy="${y(score)}" r="3" fill="var(--hi)"/>`).join(''):'';
+ let svg='<svg viewBox="0 0 420 150" role="img" aria-label="Cumulative TraceShield and Detoxify scores on a zero to one scale">';
+ [18,67,116].forEach((line,i)=>{svg+=`<line x1="26" y1="${line}" x2="394" y2="${line}" stroke="var(--bd)"/>`;svg+=`<text x="21" y="${line+4}" text-anchor="end" font-size="10" fill="var(--mut)">${1-i*.5}</text>`});
+ svg+='<line x1="26" y1="18" x2="26" y2="116" stroke="var(--mut)"/>';
+ if(tracePoints)svg+=`<polyline points="${tracePoints}" fill="none" stroke="var(--acc)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>${traceMarks}`;
+ if(detoxPoints)svg+=`<polyline points="${detoxPoints}" fill="none" stroke="var(--hi)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>${detoxMarks}`;
+ svg+='</svg>';
+ $('replay-chart').innerHTML=svg+(allDetox?'':'<div class="mut">Detoxify line hidden because at least one message has no DETOX score.</div>');
+}
+function finishReplay(run){
+ if(run!==replayRun)return;
+ clearReplayTimer();replayPaused=false;replayBusy=false;
+ $('replay-start').disabled=false;$('replay-pause').hidden=true;$('replay-reset').hidden=false;
+ $('replay-status').textContent=`Replay complete: ${replayMessages.length} messages.`;
+}
+function revealReplayMessage(run){
+ if(run!==replayRun||replayPaused)return;
+ if(replayIndex>=replayMessages.length){finishReplay(run);return}
+ replayBusy=true;
+ analyzeReplay(replayMessages.slice(0,replayIndex+1)).then(()=>{
+  if(run!==replayRun)return;
+  replayBusy=false;
+  replayScores.push(S.score);
+  const known=replayMessages[replayIndex].base;
+  replayDetox.push(Math.max(known,...replayDetox));
+  replayIndex++;
+  $('replay-viz').hidden=false;drawReplayChart();
+  $('replay-status').textContent=`Showing ${replayIndex} of ${replayMessages.length} messages.`;
+  if(replayIndex===replayMessages.length)finishReplay(run);
+  else if(!replayPaused)replayTimer=setTimeout(()=>revealReplayMessage(run),700);
+ }).catch(error=>{
+  if(run!==replayRun)return;
+  clearReplayTimer();replayPaused=false;replayBusy=false;
+  $('replay-start').disabled=false;$('replay-pause').hidden=true;
+  $('replay-status').textContent=`Replay stopped: ${error.message}`;
+ });
+}
+function startReplay(){
+ if(!S.msgs.length)return;
+ clearReplayTimer();const run=++replayRun;
+ replayMessages=S.msgs.slice();replayIndex=0;replayPaused=false;replayBusy=false;replayScores=[];replayDetox=[];
+ $('replay-start').disabled=true;
+ $('tr').replaceChildren();$('onlyf').checked=false;$('tr').classList.remove('only');
+ $('replay-viz').hidden=false;$('replay-chart').replaceChildren();
+ $('replay-pause').hidden=false;$('replay-pause').textContent='Pause';$('replay-reset').hidden=false;
+ $('replay-status').textContent=`Starting replay: ${replayMessages.length} messages.`;
+ if(window.matchMedia('(prefers-reduced-motion: reduce)').matches){
+  const showFinal=async()=>{
+   for(let i=0;i<replayMessages.length;i++){
+    replayBusy=true;await analyzeReplay(replayMessages.slice(0,i+1));
+    if(run!==replayRun)return;
+    replayBusy=false;
+    replayScores.push(S.score);
+    replayDetox.push(Math.max(replayMessages[i].base,...replayDetox));
+   }
+   S.msgs=replayMessages.slice();drawReplayChart();finishReplay(run);
+  };
+  showFinal().catch(error=>{if(run===replayRun){replayBusy=false;$('replay-start').disabled=false;$('replay-pause').hidden=true;$('replay-status').textContent=`Replay stopped: ${error.message}`}});
+ }else replayTimer=setTimeout(()=>revealReplayMessage(run),700);
+}
+async function resetReplay(){
+ const run=++replayRun,messages=replayMessages.slice();clearReplayTimer();replayPaused=false;replayBusy=false;
+ $('replay-start').disabled=true;
+ $('replay-pause').hidden=true;$('replay-reset').hidden=true;$('replay-viz').hidden=true;
+ $('replay-chart').replaceChildren();$('replay-status').textContent='';
+ if(messages.length){
+  try{await analyzeReplay(messages)}
+  catch(error){if(run===replayRun){$('replay-start').disabled=false;$('replay-status').textContent=`Reset failed: ${error.message}`}return}
+ }
+ if(run!==replayRun)return;
+ replayMessages=[];replayScores=[];replayDetox=[];replayIndex=0;
+ $('replay-start').disabled=false;
+}
+function toggleReplayPause(){
+ if(replayIndex>=replayMessages.length)return;
+ replayPaused=!replayPaused;
+ $('replay-pause').textContent=replayPaused?'Resume':'Pause';
+ if(replayPaused)clearReplayTimer();
+ else if(!replayBusy)replayTimer=setTimeout(()=>revealReplayMessage(replayRun),700);
+}
 document.addEventListener('click',e=>{const a=e.target.closest('[data-id]');if(!a)return;const el=$('m'+a.dataset.id);if(!el)return;$('onlyf').checked=false;$('tr').classList.remove('only');el.scrollIntoView({behavior:'smooth',block:'center'});el.classList.remove('pulse');void el.offsetWidth;el.classList.add('pulse')});
 $('onlyf').onchange=e=>$('tr').classList.toggle('only',e.target.checked);
+$('replay-start').onclick=startReplay;
+$('replay-pause').onclick=toggleReplayPause;
+$('replay-reset').onclick=resetReplay;
 let liveT=null;
 const LC={High:'var(--hi)',Elevated:'var(--el)',Low:'var(--lo)'};
 $('lv-stop').onclick=()=>{clearInterval(liveT);$('lc').innerHTML='<span class="mut">Messages will appear here as they arrive.</span>';$('lv').textContent='Not monitoring';$('lv').style.color='var(--mut)';$('lva').hidden=true;$('lv-err').textContent='';$('clr').click()};
@@ -300,7 +452,7 @@ $('d1').onclick=()=>{$('inp').value=D1;run()};
 $('d2').onclick=()=>{$('inp').value=D2;run()};
 $('me').onchange=e=>{S.me=e.target.value;analyze()};
 $('prt').onclick=()=>window.print();
-$('clr').onclick=()=>{$('inp').value='';$('res').hidden=true;$('file').value='';$('ppre').textContent='';$('pcount').textContent='Nothing analyzed yet.';$('me').innerHTML='<option>(analyze first)</option>';S={msgs:[],me:'',raw:''}};
+$('clr').onclick=async()=>{cancelReplay();await replayAnalysis;$('inp').value='';$('res').hidden=true;$('result-nav').hidden=true;$('file').value='';$('ppre').textContent='';$('pcount').textContent='Nothing analyzed yet.';$('me').innerHTML='<option>(analyze first)</option>';S={msgs:[],me:'',raw:''}};
 $('file').onchange=async e=>{const f=e.target.files[0];if(!f)return;try{const msgs=load(parseIG(JSON.parse(await f.text())));if(!msgs.length)throw 0;$('inp').value=msgs.map(m=>`[${m.ts.getFullYear()}-${String(m.ts.getMonth()+1).padStart(2,'0')}-${String(m.ts.getDate()).padStart(2,'0')} ${String(m.ts.getHours()).padStart(2,'0')}:${String(m.ts.getMinutes()).padStart(2,'0')}] ${m.sender}: ${m.text.replace(/\n/g,' ')}`).join('\n');run()}catch(x){alert('Could not read that file. Use a message_1.json from the Instagram export.')}};
 </script>
 </body>
