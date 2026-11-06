@@ -22,10 +22,12 @@ h1 small{display:block;font:400 14px system-ui,sans-serif;color:var(--mut);margi
 h2{margin:0 0 10px;font-size:17px}
 .pill{border:1px solid var(--acc);color:var(--acc);border-radius:99px;padding:4px 12px;font-size:13px;font-weight:600}
 .card{background:var(--card);border:1px solid var(--bd);border-radius:14px;padding:16px;margin-bottom:16px}
-.result-nav{position:sticky;top:env(safe-area-inset-top,0px);z-index:10;display:flex;gap:8px;overflow-x:auto;white-space:nowrap;background:var(--card);border:1px solid var(--bd);border-radius:14px;padding:8px;margin-bottom:16px}
-.result-nav[hidden]{display:none}
-.result-nav a{flex:0 0 auto;border:1px solid var(--bd);border-radius:99px;padding:4px 12px;color:var(--fg);font-size:14px;font-weight:600;text-decoration:none}
-.result-nav a:hover{border-color:var(--acc);color:var(--acc)}
+.result-nav{position:sticky;top:env(safe-area-inset-top,0px);z-index:10;display:flex;gap:8px;background:var(--card);border:1px solid var(--bd);border-radius:14px;padding:8px;margin-bottom:16px}
+.result-nav button{flex:1;min-width:0;border-color:transparent;padding:8px 10px}
+.result-nav button[aria-selected="true"]{background:var(--acc);border-color:var(--acc);color:#fff}
+.result-nav button:hover{border-color:var(--acc);color:var(--acc)}
+.tab-panel[hidden]{display:none}
+.rk .warn{display:none}
 #sum,#why-card,#timeline,#transcript,#report-card{scroll-margin-top:calc(64px + env(safe-area-inset-top,0px))}
 textarea{width:100%;min-height:150px;background:var(--bg);color:var(--fg);border:1px solid var(--bd);border-radius:10px;padding:10px;font:14px/1.4 ui-monospace,Menlo,Consolas,monospace;resize:vertical}
 .row{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-top:10px}
@@ -63,7 +65,7 @@ ul{margin:6px 0 0;padding-left:20px}
 #report td,#report th{border:1px solid #ccd;padding:4px 8px;text-align:left;vertical-align:top}
 .sm{font-size:12px;word-break:break-all}
 footer{color:var(--mut);font-size:13px;text-align:center;margin-top:20px}
-@media print{body *{visibility:hidden}#report,#report *{visibility:visible}#report{position:absolute;left:0;top:0;width:100%;border:0}}
+@media print{body *{visibility:hidden!important}.tab-panel#tab-report[hidden]{display:block!important}#report,#report *{visibility:visible!important}#report{position:absolute;left:0;top:0;width:100%;border:0}}
 </style>
 <style>
 body{background:radial-gradient(900px 400px at 90% -120px,rgba(99,102,241,.2),transparent),radial-gradient(700px 300px at -5% 0,rgba(20,184,166,.14),transparent),var(--bg)}
@@ -99,6 +101,11 @@ textarea:focus,select:focus{outline:2px solid var(--acc);outline-offset:1px}
 .bs u{display:inline-block;width:52px;height:6px;border-radius:3px;background:var(--bd);text-decoration:none;overflow:hidden}
 .bs s{display:block;height:100%;background:var(--mut);text-decoration:none}.bs.ts s{background:var(--c)}
 @media (max-width:560px){.hero h1{font-size:30px}.msg{max-width:96%}.gauge{width:150px}}
+@media (max-width:700px){
+  .wrap{padding-bottom:calc(88px + env(safe-area-inset-bottom,0px))}
+  .result-nav{position:fixed;top:auto;bottom:0;left:0;right:0;gap:2px;margin:0;padding:6px 6px calc(6px + env(safe-area-inset-bottom,0px));border-radius:14px 14px 0 0;box-shadow:0 -4px 18px rgba(2,6,23,.16)}
+  .result-nav button{min-height:44px;padding:6px 2px;font-size:12px}
+}
 </style>
 <style>
 .demo{display:flex;flex-direction:column;align-items:flex-start;text-align:left;gap:2px;padding:12px 16px;flex:1 1 220px}
@@ -132,10 +139,15 @@ ol{padding-left:20px;margin:6px 0 0;font-size:14px}
   <span class="pill">Runs in your browser. Nothing is uploaded.</span>
 </header>
 
-<nav class="result-nav" id="result-nav" aria-label="Analysis results" hidden>
-  <a href="#sum">Result</a><a href="#why-card">Why flagged</a><a href="#timeline">Timeline</a><a href="#transcript">Transcript</a><a href="#report-card">Report</a>
+<nav class="result-nav" id="result-nav" role="tablist" aria-label="TraceShield sections">
+  <button type="button" id="tab-analyze-button" role="tab" aria-controls="tab-analyze" aria-selected="true" tabindex="0" data-tab="analyze">Analyze</button>
+  <button type="button" id="tab-results-button" role="tab" aria-controls="tab-results" aria-selected="false" tabindex="-1" data-tab="results">Results</button>
+  <button type="button" id="tab-report-button" role="tab" aria-controls="tab-report" aria-selected="false" tabindex="-1" data-tab="report">Report</button>
+  <button type="button" id="tab-safety-button" role="tab" aria-controls="tab-safety" aria-selected="false" tabindex="-1" data-tab="safety">Safety</button>
+  <button type="button" id="tab-about-button" role="tab" aria-controls="tab-about" aria-selected="false" tabindex="-1" data-tab="about">About</button>
 </nav>
 
+<section class="tab-panel" id="tab-analyze" role="tabpanel" aria-labelledby="tab-analyze-button">
 <section class="card">
   <h2>1. Add a conversation</h2>
   <div class="mut">Try an example, or paste your own conversation below.</div><div class="row ex"><button class="demo" id="d1"><b>⚠ Escalating harassment</b><span>9 messages, English and Hinglish</span></button><button class="demo" id="d2"><b>✓ Friendly chat</b><span>5 messages, should stay Low</span></button></div><textarea id="inp" placeholder="Paste messages, one per line:&#10;[2026-10-28 18:05] Rahul: hey, free this weekend?&#10;[2026-10-28 18:40] Priya: I need some time. Please stop messaging me."></textarea>
@@ -166,7 +178,9 @@ ol{padding-left:20px;margin:6px 0 0;font-size:14px}
   <div class="row"><input id="api-url" value="http://localhost:8000" style="flex:1 1 220px;padding:9px;border-radius:10px;border:1px solid var(--bd);background:var(--bg);color:var(--fg)"><button id="api-go">Analyze with backend</button></div>
   <div id="api-out" class="mut" style="margin-top:10px"></div>
 </details>
+</section>
 
+<section class="tab-panel" id="tab-results" role="tabpanel" aria-labelledby="tab-results-button" hidden>
 <div id="res" hidden>
 <section class="card" id="sum"></section>
 <section class="card" id="why-card"><h2>Why this was flagged</h2><div id="why"></div></section>
@@ -185,11 +199,42 @@ ol{padding-left:20px;margin:6px 0 0;font-size:14px}
   </div>
 </section>
 <section class="card" id="transcript"><h2>Transcript with baseline comparison</h2><div class="mut" id="cmp"></div><label class="mut tgl"><input type="checkbox" id="onlyf"> Show flagged messages only</label><div id="tr" style="margin-top:10px"></div></section>
-<section class="card" id="report-card"><h2>Evidence report</h2>
+</div>
+</section>
+
+<section class="tab-panel" id="tab-report" role="tabpanel" aria-labelledby="tab-report-button" hidden>
+<section class="card" id="report-card" hidden><h2>Evidence report</h2>
   <div class="row" style="margin:0 0 12px"><button class="p" id="prt">Print / Save as PDF</button><span class="mut">Prints only the report below.</span></div>
   <div id="report"></div></section>
-</div>
-<footer>TraceShield gives a risk assessment, not a legal verdict. This prototype uses rules plus a Hinglish knowledge base. LLM labelling and vector retrieval are optional and not enabled in this demo. Test data is synthetic.</footer>
+</section>
+
+<section class="tab-panel" id="tab-safety" role="tabpanel" aria-labelledby="tab-safety-button" hidden>
+  <section class="card"><h2>Safety guidance</h2>
+    <ul>
+      <li>Do not delete concerning messages. Keep the original conversation and note relevant dates.</li>
+      <li>Tell someone you trust, such as a friend, family member, counselor, or campus support service.</li>
+      <li>Consider reporting the account on its platform and contacting appropriate campus or local authorities.</li>
+      <li>If you are in India, the National Cyber Crime Reporting Portal is <b>cybercrime.gov.in</b>; the cybercrime helpline is <b>1930</b>. Verify current contact details and procedures.</li>
+    </ul>
+    <p class="mut">If you feel in immediate danger, contact local emergency services or someone who can help you right away. This prototype is not an emergency service.</p>
+  </section>
+</section>
+
+<section class="tab-panel" id="tab-about" role="tabpanel" aria-labelledby="tab-about-button" hidden>
+  <section class="card"><h2>How the score is computed</h2>
+    <p>The heuristic adds points for five signals: repeated contact after a refusal (+2 when there are at least 3 messages), night-time messages (+1 when more than 30% are between 00:00 and 04:59), an increasing severity trend (+1), surveillance-type remarks (+2), and threats (+3). The maximum possible total is 9 points.</p>
+    <p>Scores of 0–2 are Low, 3–4 are Elevated, and 5 or more are High. These thresholds organize patterns for review; they are not probabilities.</p>
+  </section>
+  <section class="card"><h2>Limitations</h2>
+    <ul>
+      <li>This is a prototype using fixed text patterns and heuristic rules. It may miss harmful behavior or flag context that is benign.</li>
+      <li>Language, sarcasm, surrounding context, and messages outside the supplied conversation can affect interpretation.</li>
+      <li>The result is a risk assessment, not a legal verdict, proof, or substitute for professional advice. Review the original conversation and use your judgment.</li>
+      <li>Analysis runs in your browser unless you explicitly choose the optional local backend. The live monitor is simulated and does not read other pages.</li>
+    </ul>
+  </section>
+  <footer>TraceShield gives a risk assessment, not a legal verdict. This prototype uses rules plus a Hinglish knowledge base. LLM labelling and vector retrieval are optional and not enabled in this demo. Test data is synthetic.</footer>
+</section>
 </div>
 
 <script>
@@ -452,8 +497,41 @@ $('d1').onclick=()=>{$('inp').value=D1;run()};
 $('d2').onclick=()=>{$('inp').value=D2;run()};
 $('me').onchange=e=>{S.me=e.target.value;analyze()};
 $('prt').onclick=()=>window.print();
-$('clr').onclick=async()=>{cancelReplay();await replayAnalysis;$('inp').value='';$('res').hidden=true;$('result-nav').hidden=true;$('file').value='';$('ppre').textContent='';$('pcount').textContent='Nothing analyzed yet.';$('me').innerHTML='<option>(analyze first)</option>';S={msgs:[],me:'',raw:''}};
+$('clr').onclick=async()=>{cancelReplay();await replayAnalysis;$('inp').value='';$('res').hidden=true;$('report-card').hidden=true;$('report').replaceChildren();$('file').value='';$('ppre').textContent='';$('pcount').textContent='Nothing analyzed yet.';$('me').innerHTML='<option>(analyze first)</option>';S={msgs:[],me:'',raw:''}};
 $('file').onchange=async e=>{const f=e.target.files[0];if(!f)return;try{const msgs=load(parseIG(JSON.parse(await f.text())));if(!msgs.length)throw 0;$('inp').value=msgs.map(m=>`[${m.ts.getFullYear()}-${String(m.ts.getMonth()+1).padStart(2,'0')}-${String(m.ts.getDate()).padStart(2,'0')} ${String(m.ts.getHours()).padStart(2,'0')}:${String(m.ts.getMinutes()).padStart(2,'0')}] ${m.sender}: ${m.text.replace(/\n/g,' ')}`).join('\n');run()}catch(x){alert('Could not read that file. Use a message_1.json from the Instagram export.')}};
+</script>
+<script>
+const tabs=[...document.querySelectorAll('#result-nav [role="tab"]')];
+const panels=tabs.map(tab=>document.getElementById(tab.getAttribute('aria-controls')));
+function activateTab(name,focus){
+ const index=tabs.findIndex(tab=>tab.dataset.tab===name);
+ if(index<0)return;
+ tabs.forEach((tab,i)=>{const active=i===index;tab.setAttribute('aria-selected',String(active));tab.tabIndex=active?0:-1;panels[i].hidden=!active});
+ if(focus)tabs[index].focus();
+}
+tabs.forEach(tab=>tab.addEventListener('click',()=>activateTab(tab.dataset.tab,false)));
+document.getElementById('result-nav').addEventListener('keydown',event=>{
+ const current=tabs.indexOf(document.activeElement);
+ let next=current;
+ if(event.key==='ArrowRight')next=(current+1)%tabs.length;
+ else if(event.key==='ArrowLeft')next=(current-1+tabs.length)%tabs.length;
+ else if(event.key==='Home')next=0;
+ else if(event.key==='End')next=tabs.length-1;
+ else return;
+ event.preventDefault();
+ activateTab(tabs[next].dataset.tab,true);
+});
+let pendingResultsTab=false;
+document.addEventListener('click',event=>{
+ const button=event.target.closest('button');
+ if(button&&['go','d1','d2'].includes(button.id))pendingResultsTab=true;
+},true);
+const report=document.getElementById('report');
+new MutationObserver(()=>{
+ if(!report.textContent.trim())return;
+ document.getElementById('report-card').hidden=false;
+ if(pendingResultsTab){pendingResultsTab=false;activateTab('results',false)}
+}).observe(report,{childList:true,subtree:true});
 </script>
 </body>
 </html>
