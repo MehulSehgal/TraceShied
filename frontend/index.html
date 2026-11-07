@@ -14,7 +14,7 @@
 :root[data-theme="dark"]{--bg:#0b1220;--card:#16233b;--fg:#f1f5f9;--mut:#a9b8cf;--bd:#27385a;--acc:#2dd4bf;--hi:#fb7185;--el:#fbbf24;--lo:#4ade80;color-scheme:dark}
 html{scroll-behavior:smooth;scroll-padding-top:env(safe-area-inset-top,0px)}
 *{box-sizing:border-box}
-body{margin:0;background:var(--bg);color:var(--fg);font:16px/1.5 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
+body{margin:0;padding-top:44px;background:var(--bg);color:var(--fg);font:16px/1.5 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
 .wrap{max-width:980px;margin:0 auto;padding:20px 16px 48px}
 header{display:flex;flex-wrap:wrap;align-items:center;gap:12px;justify-content:space-between;margin-bottom:18px}
 h1{margin:0;font:700 28px/1.1 Georgia,"Times New Roman",serif}
@@ -22,15 +22,15 @@ h1 small{display:block;font:400 14px system-ui,sans-serif;color:var(--mut);margi
 h2{margin:0 0 10px;font-size:17px}
 .pill{border:1px solid var(--acc);color:var(--acc);border-radius:99px;padding:4px 12px;font-size:13px;font-weight:600}
 .card{background:var(--card);border:1px solid var(--bd);border-radius:14px;padding:16px;margin-bottom:16px}
-.result-nav{position:fixed;top:50%;right:16px;transform:translateY(-50%);z-index:1000;display:flex;flex-direction:column;gap:4px;width:140px;padding:8px;background:var(--card);border:1px solid var(--bd);border-radius:14px;box-shadow:0 6px 24px rgba(2,6,23,.16)}
+.result-nav{position:fixed;top:calc(50% + (44px + env(safe-area-inset-top,0px))/2);right:16px;transform:translateY(-50%);z-index:1000;display:flex;flex-direction:column;gap:4px;width:140px;padding:8px;background:var(--card);border:1px solid var(--bd);border-radius:14px;box-shadow:0 6px 24px rgba(2,6,23,.16)}
 .result-nav a{position:relative;display:flex;align-items:center;gap:9px;min-height:40px;padding:6px 9px;border:1px solid transparent;border-radius:10px;color:var(--fg);font-size:14px;font-weight:600;text-decoration:none}
 .result-nav a:hover{border-color:var(--acc)}
 .result-nav a[aria-current="true"]{background:var(--acc);color:#fff}
 .result-nav a.disabled,.result-nav a[aria-disabled="true"]{color:var(--mut);opacity:.55}
 .nav-icon{display:grid;place-items:center;flex:none;width:22px;height:22px;border:1px solid currentColor;border-radius:50%;font-size:11px}
-.tab-panel{scroll-margin-top:16px}
+.tab-panel{scroll-margin-top:calc(60px + env(safe-area-inset-top,0px))}
 .rk .warn{display:none}
-#sum,#why-card,#timeline,#transcript,#report-card{scroll-margin-top:calc(64px + env(safe-area-inset-top,0px))}
+#sum,#why-card,#timeline,#transcript,#report-card{scroll-margin-top:calc(60px + env(safe-area-inset-top,0px))}
 textarea{width:100%;min-height:150px;background:var(--bg);color:var(--fg);border:1px solid var(--bd);border-radius:10px;padding:10px;font:14px/1.4 ui-monospace,Menlo,Consolas,monospace;resize:vertical}
 .row{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-top:10px}
 button,select{font:600 14px system-ui,sans-serif;border-radius:10px;border:1px solid var(--bd);background:var(--card);color:var(--fg);padding:9px 14px;cursor:pointer}
@@ -67,7 +67,7 @@ ul{margin:6px 0 0;padding-left:20px}
 #report td,#report th{border:1px solid #ccd;padding:4px 8px;text-align:left;vertical-align:top}
 .sm{font-size:12px;word-break:break-all}
 footer{color:var(--mut);font-size:13px;text-align:center;margin-top:20px}
-@media print{.result-nav{display:none!important}body *{visibility:hidden!important}#report,#report *{visibility:visible!important}#report{position:absolute;left:0;top:0;width:100%;border:0}}
+@media print{.result-nav,#welcome,#utility-bar{display:none!important}body *{visibility:hidden!important}#report,#report *{visibility:visible!important}#report{position:absolute;left:0;top:0;width:100%;border:0}}
 </style>
 <style>
 body{background:radial-gradient(850px 420px at 92% -90px,rgba(124,58,237,.2),transparent),radial-gradient(720px 360px at -6% 10%,rgba(20,184,166,.18),transparent),radial-gradient(700px 420px at 55% 78%,rgba(14,165,233,.07),transparent),var(--bg)}
@@ -103,6 +103,29 @@ body{background:radial-gradient(850px 420px at 92% -90px,rgba(124,58,237,.2),tra
 .section-intro h2::before{display:none}
 .section-intro p{margin:0;color:var(--mut)}
 #tab-about .card:first-of-type{background:linear-gradient(145deg,rgba(124,58,237,.065),var(--card) 55%)}
+.utility-bar{position:fixed;top:0;left:0;right:0;z-index:2000;display:flex;justify-content:space-between;align-items:center;gap:8px;height:calc(44px + env(safe-area-inset-top,0px));padding:env(safe-area-inset-top,0px) 12px 0;background:var(--bg);border-bottom:1px solid var(--bd)}
+.utility-bar[hidden]{display:none}
+.utility-bar button{flex:none;min-height:36px;padding:6px 12px;border:0;border-radius:9px;color:#fff;font-size:13px;font-weight:800;white-space:nowrap}
+#quick-exit{background:#dc2626}
+#lock-now{background:#334155}
+#welcome{position:fixed;inset:0;z-index:3000;display:grid;place-items:center;overflow:auto;padding:84px 18px 24px;background:var(--bg);color:var(--fg)}
+#welcome[hidden]{display:none}
+.welcome-card{width:min(100%,480px);padding:30px;background:var(--card);border:1px solid var(--bd);border-radius:24px;box-shadow:0 20px 60px rgba(2,6,23,.2);text-align:center}
+.welcome-logo{display:grid;place-items:center;width:68px;height:68px;margin:0 auto 14px;border:1px solid rgba(255,255,255,.55);border-radius:20px;background:linear-gradient(135deg,#0f766e,#4f46e5);color:#fff;font-size:36px}
+.welcome-card h1{font-size:34px}
+.welcome-tagline{margin:8px 0 12px;color:var(--panel-accent,#4f46e5);font-weight:700}
+.welcome-copy{margin:0 0 18px;color:var(--mut);font-size:14px}
+.welcome-primary{width:100%;min-height:48px;background:linear-gradient(120deg,#0f9f92,#4f46e5);border:0;border-radius:12px;color:#fff}
+.welcome-card details{text-align:left;margin-top:12px;padding:12px;border:1px solid var(--bd);border-radius:12px}
+.welcome-card summary{padding:3px}
+.pin-form{display:grid;gap:10px;margin-top:12px}
+.pin-form label{text-align:left;font-size:14px;font-weight:700}
+.pin-form input{width:100%;min-height:46px;padding:10px;border:1px solid var(--bd);border-radius:10px;background:var(--bg);color:var(--fg);font:600 18px ui-monospace,monospace;letter-spacing:.2em}
+.pin-note,.pin-message{margin:4px 0 0;color:var(--mut);font-size:12px}
+.pin-message{min-height:18px;color:var(--hi);font-size:13px;font-weight:700}
+.welcome-link{border:0;background:none;color:var(--acc);padding:6px;text-decoration:underline;cursor:pointer}
+@media (max-width:560px){.welcome-card{padding:24px 18px}.utility-bar{padding-left:8px;padding-right:8px}.utility-bar button{padding-left:10px;padding-right:10px}}
+@media (prefers-reduced-motion:reduce){#welcome{animation:none;transition:none}}
 h2{font-size:18px;display:flex;align-items:center;gap:9px}
 h2::before{content:"";width:4px;height:18px;border-radius:2px;background:linear-gradient(var(--acc),#6366f1)}
 button{transition:transform .12s,filter .12s}button:hover{transform:translateY(-1px)}
@@ -166,14 +189,49 @@ ol{padding-left:20px;margin:6px 0 0;font-size:14px}
 </style>
 </head>
 <body>
-<div class="wrap">
+<div id="welcome" role="dialog" aria-modal="true" aria-labelledby="welcome-title" aria-describedby="welcome-description">
+  <div class="welcome-card">
+    <div class="welcome-logo" aria-hidden="true">🛡️</div>
+    <h1 id="welcome-title">TraceShield</h1>
+    <p class="welcome-tagline">Trace the pattern. Shield the person.</p>
+    <p class="welcome-copy" id="welcome-description">No account needed. Nothing you paste is stored or uploaded unless you use the optional backend. Everything runs in this browser tab.</p>
+    <div id="welcome-guest-panel">
+      <button type="button" class="welcome-primary" id="welcome-guest" autofocus>Continue as guest</button>
+      <details id="pin-setup-section">
+        <summary>Set an optional PIN lock</summary>
+        <div class="pin-form">
+          <label for="pin-setup">Choose a 4 to 6 digit PIN</label>
+          <input id="pin-setup" type="password" inputmode="numeric" pattern="[0-9]*" minlength="4" maxlength="6" autocomplete="off">
+          <button type="button" class="welcome-primary" id="pin-set">Set PIN and continue</button>
+          <p class="pin-message" id="pin-setup-error" role="alert"></p>
+          <p class="pin-note">A casual privacy lock to hide the screen from someone nearby. It is not encryption and does not protect your device.</p>
+        </div>
+      </details>
+      <p class="pin-message" id="pin-unavailable" hidden>PIN lock is unavailable in this browser</p>
+    </div>
+    <div id="welcome-pin" hidden>
+      <div class="pin-form">
+        <label for="pin-unlock-input">Enter your PIN</label>
+        <input id="pin-unlock-input" type="password" inputmode="numeric" pattern="[0-9]*" minlength="4" maxlength="6" autocomplete="off">
+        <button type="button" class="welcome-primary" id="pin-unlock">Unlock</button>
+        <p class="pin-message" id="pin-error" role="alert"></p>
+        <a class="welcome-link" href="#" id="pin-reset">Forgot PIN? Reset</a>
+      </div>
+    </div>
+  </div>
+</div>
+<div class="utility-bar" id="utility-bar" hidden>
+  <button type="button" id="quick-exit" aria-label="Quick exit">Quick exit</button>
+  <button type="button" id="lock-now" aria-label="Lock now" hidden>Lock now</button>
+</div>
+<div class="wrap" inert>
 <header class="hero">
   <h1><span class="logo">🛡️</span>TraceShield<small>Trace the pattern. Shield the person.</small></h1>
   <div class="steps"><span>1 · Paste or upload a chat</span><span>2 · Pattern engine scores it</span><span>3 · Get an evidence report</span></div>
   <span class="pill">Runs in your browser. Nothing is uploaded.</span>
 </header>
 
-<nav aria-label="Page sections" id="result-nav" class="result-nav">
+<nav aria-label="Page sections" id="result-nav" class="result-nav" hidden>
   <a href="#tab-analyze" aria-current="true"><span class="nav-icon">1</span><span class="nav-label">Analyze</span></a>
   <a href="#tab-results" class="disabled" aria-disabled="true" title="Run an analysis first"><span class="nav-icon">2</span><span class="nav-label">Results</span></a>
   <a href="#tab-report" class="disabled" aria-disabled="true" title="Run an analysis first"><span class="nav-icon">3</span><span class="nav-label">Report</span></a>
@@ -268,6 +326,7 @@ ol{padding-left:20px;margin:6px 0 0;font-size:14px}
       <li>Analysis runs in your browser unless you explicitly choose the optional local backend. The live monitor is simulated and does not read other pages.</li>
     </ul>
   </section>
+  <p class="mut">Quick exit clears this page's data and returns to the welcome screen. It does not close the tab, change the tab title or erase your browser history. Use a private window if someone might check your history.</p>
   <footer>TraceShield gives a risk assessment, not a legal verdict. This prototype uses rules plus a Hinglish knowledge base. LLM labelling and vector retrieval are optional and not enabled in this demo. Test data is synthetic.</footer>
 </section>
 </div>
@@ -636,6 +695,196 @@ document.getElementById('clr').addEventListener('click',()=>{
 });
 updateNavAvailability();
 syncScrollspy();
+</script>
+<script>
+(()=>{
+ const welcome=document.getElementById('welcome');
+ const guestPanel=document.getElementById('welcome-guest-panel');
+ const pinPanel=document.getElementById('welcome-pin');
+ const guestButton=document.getElementById('welcome-guest');
+ const pinSetup=document.getElementById('pin-setup');
+ const pinSetupError=document.getElementById('pin-setup-error');
+ const pinUnavailable=document.getElementById('pin-unavailable');
+ const pinInput=document.getElementById('pin-unlock-input');
+ const pinError=document.getElementById('pin-error');
+ const setupSection=document.getElementById('pin-setup-section');
+ const app=document.querySelector('.wrap');
+ const nav=document.getElementById('result-nav');
+ const utilityBar=document.getElementById('utility-bar');
+ const lockButton=document.getElementById('lock-now');
+ const quickExitButton=document.getElementById('quick-exit');
+ const bytesToHex=bytes=>Array.from(bytes,value=>value.toString(16).padStart(2,'0')).join('');
+ const hexToBytes=hex=>Uint8Array.from(hex.match(/.{2}/g)||[],part=>parseInt(part,16));
+ const getSession=value=>{try{return sessionStorage.getItem(value)}catch{return null}};
+ const setSession=(key,value)=>{try{sessionStorage.setItem(key,value);return true}catch{return false}};
+ const removeSession=key=>{try{sessionStorage.removeItem(key)}catch{}};
+ const cryptoReady=Boolean(window.crypto&&window.crypto.subtle&&window.crypto.getRandomValues);
+ let storageReady=false,sessionReady=false,pinRecord=null,pinAttempts=0,pinLockTimer=null;
+ try{
+  const saved=localStorage.getItem('ts_pin');
+  storageReady=true;
+  if(saved){
+   const parsed=JSON.parse(saved);
+   if(parsed&&typeof parsed.salt==='string'&&/^[a-f0-9]{32}$/i.test(parsed.salt)&&typeof parsed.hash==='string'&&/^[a-f0-9]{64}$/i.test(parsed.hash))pinRecord=parsed;
+  }
+ }catch{storageReady=false}
+ try{sessionStorage.setItem('__ts_storage_test','1');sessionReady=true}catch{}
+ try{sessionStorage.removeItem('__ts_storage_test')}catch{sessionReady=false}
+ const pinAvailable=storageReady&&sessionReady&&cryptoReady;
+ if(!pinAvailable){
+  setupSection.hidden=true;
+  pinUnavailable.hidden=false;
+  pinRecord=null;
+ }
+ function showPinMode(){
+  guestPanel.hidden=true;
+  pinPanel.hidden=false;
+  welcome.hidden=false;
+  nav.hidden=true;
+  utilityBar.hidden=true;
+  app.setAttribute('inert','');
+  pinError.textContent='';
+  pinInput.value='';
+  pinInput.disabled=false;
+  pinAttempts=0;
+  clearTimeout(pinLockTimer);
+  pinInput.focus();
+ }
+ function enterApp(focusNavigation=false){
+  welcome.hidden=true;
+  app.removeAttribute('inert');
+  nav.hidden=false;
+  utilityBar.hidden=false;
+  lockButton.hidden=!pinRecord;
+  if(focusNavigation)nav.querySelector('a[href="#tab-analyze"]').focus({preventScroll:true});
+ }
+ function enterAsGuest(){
+  setSession('ts_welcomed','1');
+  enterApp(true);
+ }
+ function showNormalWelcome(){
+  guestPanel.hidden=false;
+  pinPanel.hidden=true;
+  welcome.hidden=false;
+  app.setAttribute('inert','');
+  nav.hidden=true;
+  utilityBar.hidden=true;
+  guestButton.focus();
+ }
+ async function hashPin(pin,salt){
+  const pinBytes=new TextEncoder().encode(pin);
+  const value=new Uint8Array(salt.length+pinBytes.length);
+  value.set(salt);
+  value.set(pinBytes,salt.length);
+  return bytesToHex(new Uint8Array(await crypto.subtle.digest('SHA-256',value)));
+ }
+ function quickExit(){
+  document.getElementById('clr').click();
+  document.getElementById('inp').value='';
+  document.getElementById('file').value='';
+  window.scrollTo(0,0);
+  requestAnimationFrame(()=>window.scrollTo(0,0));
+  removeSession('ts_unlocked');
+  removeSession('ts_welcomed');
+  try{
+   const saved=localStorage.getItem('ts_pin');
+   const parsed=saved?JSON.parse(saved):null;
+   pinRecord=parsed&&typeof parsed.salt==='string'&&/^[a-f0-9]{32}$/i.test(parsed.salt)&&typeof parsed.hash==='string'&&/^[a-f0-9]{64}$/i.test(parsed.hash)?parsed:null;
+  }catch{pinRecord=null}
+  if(pinRecord)showPinMode();
+  else showNormalWelcome();
+ }
+ quickExitButton.addEventListener('click',quickExit);
+ let lastEscapeAt=0;
+ document.addEventListener('keydown',event=>{
+  if(event.key!=='Escape'||event.repeat||!welcome.hidden)return;
+  const now=Date.now();
+  if(now-lastEscapeAt<=800){lastEscapeAt=0;quickExit()}
+  else lastEscapeAt=now;
+ });
+ guestButton.addEventListener('click',enterAsGuest);
+ document.getElementById('pin-set').addEventListener('click',async()=>{
+  const value=pinSetup.value;
+  if(!/^[0-9]{4,6}$/.test(value)){pinSetupError.textContent='Enter a PIN with 4 to 6 digits.';pinSetup.focus();return}
+  if(!pinAvailable){setupSection.hidden=true;pinUnavailable.hidden=false;return}
+  try{
+   const salt=crypto.getRandomValues(new Uint8Array(16));
+   const record={salt:bytesToHex(salt),hash:await hashPin(value,salt)};
+   localStorage.setItem('ts_pin',JSON.stringify(record));
+   pinRecord=record;
+   pinSetup.value='';
+   setSession('ts_unlocked','1');
+   setSession('ts_welcomed','1');
+   enterApp(true);
+  }catch{
+   setupSection.hidden=true;
+   pinUnavailable.hidden=false;
+  }
+ });
+ pinSetup.addEventListener('keydown',event=>{if(event.key==='Enter'){event.preventDefault();document.getElementById('pin-set').click()}});
+ document.getElementById('pin-unlock').addEventListener('click',async()=>{
+  if(pinInput.disabled)return;
+  const value=pinInput.value;
+  if(!/^[0-9]{4,6}$/.test(value)){pinError.textContent='Enter your 4 to 6 digit PIN.';pinInput.focus();return}
+  try{
+   const matches=await hashPin(value,hexToBytes(pinRecord.salt))===pinRecord.hash;
+   pinInput.value='';
+   if(!matches){
+    pinAttempts++;
+    pinError.textContent=pinAttempts>=5?'Too many attempts. Try again in 30 seconds.':'Incorrect PIN';
+    if(pinAttempts>=5){
+     pinInput.disabled=true;
+     pinLockTimer=setTimeout(()=>{pinAttempts=0;pinInput.disabled=false;pinError.textContent='';pinInput.focus()},30000);
+    }else pinInput.focus();
+    return;
+   }
+   setSession('ts_unlocked','1');
+   setSession('ts_welcomed','1');
+   enterApp(true);
+  }catch{pinError.textContent='PIN lock is unavailable in this browser'}
+ });
+ pinInput.addEventListener('keydown',event=>{if(event.key==='Enter'){event.preventDefault();document.getElementById('pin-unlock').click()}});
+ document.getElementById('pin-reset').addEventListener('click',event=>{
+  event.preventDefault();
+  if(!window.confirm('Reset the PIN lock? This will clear the current analysis.'))return;
+  try{localStorage.removeItem('ts_pin')}catch{pinError.textContent='PIN lock is unavailable in this browser';return}
+  removeSession('ts_unlocked');
+  removeSession('ts_welcomed');
+  pinRecord=null;
+  lockButton.hidden=true;
+  clearTimeout(pinLockTimer);
+  document.getElementById('clr').click();
+  pinSetup.value='';
+  pinSetupError.textContent='';
+  setupSection.open=false;
+  showNormalWelcome();
+ });
+ lockButton.addEventListener('click',()=>{
+  if(!pinRecord)return;
+  removeSession('ts_unlocked');
+  showPinMode();
+ });
+ welcome.addEventListener('keydown',event=>{
+  if(event.key==='Escape'){event.preventDefault();event.stopPropagation();return}
+  if(event.key!=='Tab')return;
+  const focusable=[...welcome.querySelectorAll('button:not([disabled]),input:not([disabled]),a[href],summary')]
+   .filter(element=>{
+    const closedDetails=element.closest('details:not([open])');
+    return !element.closest('[hidden]')&&(!closedDetails||element.tagName==='SUMMARY')&&element.getClientRects().length;
+   });
+  if(!focusable.length){event.preventDefault();return}
+  const first=focusable[0],last=focusable[focusable.length-1];
+  if(event.shiftKey&&document.activeElement===first){event.preventDefault();last.focus()}
+  else if(!event.shiftKey&&document.activeElement===last){event.preventDefault();first.focus()}
+ });
+ const hasPin=Boolean(pinRecord);
+ lockButton.hidden=!hasPin;
+ if(hasPin){
+  if(getSession('ts_unlocked')==='1')enterApp();
+  else showPinMode();
+ }else if(getSession('ts_welcomed')==='1')enterApp();
+ else showNormalWelcome();
+})();
 </script>
 </body>
 </html>
