@@ -12,7 +12,7 @@
 :root{--bg:#f4f7fb;--card:#fff;--fg:#0f172a;--mut:#56657c;--bd:#d9e1ec;--acc:#0d9488;--hi:#e11d48;--el:#d97706;--lo:#16a34a;color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
 @media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#0b1220;--card:#16233b;--fg:#f1f5f9;--mut:#a9b8cf;--bd:#27385a;--acc:#2dd4bf;--hi:#fb7185;--el:#fbbf24;--lo:#4ade80;color-scheme:dark}}
 :root[data-theme="dark"]{--bg:#0b1220;--card:#16233b;--fg:#f1f5f9;--mut:#a9b8cf;--bd:#27385a;--acc:#2dd4bf;--hi:#fb7185;--el:#fbbf24;--lo:#4ade80;color-scheme:dark}
-html{scroll-padding-top:env(safe-area-inset-top,0px)}
+html{scroll-behavior:smooth;scroll-padding-top:env(safe-area-inset-top,0px)}
 *{box-sizing:border-box}
 body{margin:0;background:var(--bg);color:var(--fg);font:16px/1.5 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
 .wrap{max-width:980px;margin:0 auto;padding:20px 16px 48px}
@@ -22,11 +22,13 @@ h1 small{display:block;font:400 14px system-ui,sans-serif;color:var(--mut);margi
 h2{margin:0 0 10px;font-size:17px}
 .pill{border:1px solid var(--acc);color:var(--acc);border-radius:99px;padding:4px 12px;font-size:13px;font-weight:600}
 .card{background:var(--card);border:1px solid var(--bd);border-radius:14px;padding:16px;margin-bottom:16px}
-.result-nav{position:sticky;top:env(safe-area-inset-top,0px);z-index:10;display:flex;gap:8px;background:var(--card);border:1px solid var(--bd);border-radius:14px;padding:8px;margin-bottom:16px}
-.result-nav button{flex:1;min-width:0;border-color:transparent;padding:8px 10px}
-.result-nav button[aria-selected="true"]{background:var(--acc);border-color:var(--acc);color:#fff}
-.result-nav button:hover{border-color:var(--acc);color:var(--acc)}
-.tab-panel[hidden]{display:none}
+.result-nav{position:fixed;top:50%;right:16px;transform:translateY(-50%);z-index:1000;display:flex;flex-direction:column;gap:4px;width:140px;padding:8px;background:var(--card);border:1px solid var(--bd);border-radius:14px;box-shadow:0 6px 24px rgba(2,6,23,.16)}
+.result-nav a{position:relative;display:flex;align-items:center;gap:9px;min-height:40px;padding:6px 9px;border:1px solid transparent;border-radius:10px;color:var(--fg);font-size:14px;font-weight:600;text-decoration:none}
+.result-nav a:hover{border-color:var(--acc)}
+.result-nav a[aria-current="true"]{background:var(--acc);color:#fff}
+.result-nav a.disabled,.result-nav a[aria-disabled="true"]{color:var(--mut);opacity:.55}
+.nav-icon{display:grid;place-items:center;flex:none;width:22px;height:22px;border:1px solid currentColor;border-radius:50%;font-size:11px}
+.tab-panel{scroll-margin-top:16px}
 .rk .warn{display:none}
 #sum,#why-card,#timeline,#transcript,#report-card{scroll-margin-top:calc(64px + env(safe-area-inset-top,0px))}
 textarea{width:100%;min-height:150px;background:var(--bg);color:var(--fg);border:1px solid var(--bd);border-radius:10px;padding:10px;font:14px/1.4 ui-monospace,Menlo,Consolas,monospace;resize:vertical}
@@ -65,11 +67,11 @@ ul{margin:6px 0 0;padding-left:20px}
 #report td,#report th{border:1px solid #ccd;padding:4px 8px;text-align:left;vertical-align:top}
 .sm{font-size:12px;word-break:break-all}
 footer{color:var(--mut);font-size:13px;text-align:center;margin-top:20px}
-@media print{body *{visibility:hidden!important}.tab-panel#tab-report[hidden]{display:block!important}#report,#report *{visibility:visible!important}#report{position:absolute;left:0;top:0;width:100%;border:0}}
+@media print{.result-nav{display:none!important}body *{visibility:hidden!important}#report,#report *{visibility:visible!important}#report{position:absolute;left:0;top:0;width:100%;border:0}}
 </style>
 <style>
-body{background:radial-gradient(900px 400px at 90% -120px,rgba(99,102,241,.2),transparent),radial-gradient(700px 300px at -5% 0,rgba(20,184,166,.14),transparent),var(--bg)}
-.hero{display:block;position:relative;overflow:hidden;border-radius:22px;padding:28px 26px;margin-bottom:20px;background:linear-gradient(135deg,#0f766e,#312e81);color:#fff;box-shadow:0 12px 36px rgba(49,46,129,.25)}
+body{background:radial-gradient(850px 420px at 92% -90px,rgba(124,58,237,.2),transparent),radial-gradient(720px 360px at -6% 10%,rgba(20,184,166,.18),transparent),radial-gradient(700px 420px at 55% 78%,rgba(14,165,233,.07),transparent),var(--bg)}
+.hero{display:block;position:relative;overflow:hidden;border-radius:22px;padding:28px 26px;margin-bottom:20px;background:linear-gradient(120deg,#0f766e 0%,#2563eb 56%,#6d28d9 100%);color:#fff;box-shadow:0 16px 42px rgba(49,46,129,.28)}
 .hero::after{content:"";position:absolute;right:-70px;top:-70px;width:240px;height:240px;border-radius:50%;background:rgba(255,255,255,.08)}
 .hero h1{font-size:38px;display:flex;align-items:center;gap:14px;flex-wrap:wrap}
 .hero h1 small{flex-basis:100%;color:rgba(255,255,255,.88);font-size:16px;margin:0}
@@ -77,7 +79,30 @@ body{background:radial-gradient(900px 400px at 90% -120px,rgba(99,102,241,.2),tr
 .hero .pill{display:inline-block;margin-top:14px;border-color:rgba(255,255,255,.55);color:#fff;background:rgba(255,255,255,.1)}
 .steps{display:flex;flex-wrap:wrap;gap:8px;margin-top:14px}
 .steps span{background:rgba(255,255,255,.14);border:1px solid rgba(255,255,255,.28);border-radius:99px;padding:5px 13px;font-size:13px}
-.card{border-radius:18px;box-shadow:0 6px 24px rgba(2,6,23,.1)}
+.card{border-radius:18px;box-shadow:0 8px 26px rgba(2,6,23,.09)}
+.tab-panel{--panel-accent:#0d9488}
+#tab-results{--panel-accent:#4f46e5}
+#tab-report{--panel-accent:#d97706}
+#tab-safety{--panel-accent:#e11d48}
+#tab-about{--panel-accent:#7c3aed}
+.tab-panel .card{border-top:3px solid var(--panel-accent)}
+.result-nav{background:linear-gradient(155deg,var(--card),color-mix(in srgb,var(--acc) 7%,var(--card)));border-color:color-mix(in srgb,var(--acc) 24%,var(--bd));backdrop-filter:blur(14px)}
+.result-nav a{transition:background .18s ease,color .18s ease,transform .18s ease}
+.result-nav a[aria-current="true"]{background:linear-gradient(120deg,#0f9f92,#4f46e5);box-shadow:0 5px 14px rgba(79,70,229,.24)}
+.result-nav .nav-icon{background:color-mix(in srgb,var(--panel-accent,var(--acc)) 10%,var(--card));border-color:color-mix(in srgb,var(--panel-accent,var(--acc)) 50%,var(--bd));color:var(--panel-accent,var(--acc))}
+.result-nav a[aria-current="true"] .nav-icon{background:rgba(255,255,255,.18);border-color:rgba(255,255,255,.7);color:#fff}
+#result-nav a:nth-child(1){--panel-accent:#0d9488}
+#result-nav a:nth-child(2){--panel-accent:#4f46e5}
+#result-nav a:nth-child(3){--panel-accent:#d97706}
+#result-nav a:nth-child(4){--panel-accent:#e11d48}
+#result-nav a:nth-child(5){--panel-accent:#7c3aed}
+.result-nav a[aria-disabled="true"] .nav-icon{background:var(--bg);border-color:var(--bd);color:var(--mut)}
+.section-intro{margin:0 0 14px;padding:20px 22px;border:1px solid rgba(124,58,237,.2);border-radius:18px;background:linear-gradient(115deg,rgba(13,148,136,.12),rgba(99,102,241,.12),rgba(217,70,239,.1))}
+.section-intro .eyebrow{display:inline-block;margin-bottom:7px;color:var(--panel-accent);font-size:11px;font-weight:800;letter-spacing:.14em}
+.section-intro h2{margin-bottom:5px;font-size:23px}
+.section-intro h2::before{display:none}
+.section-intro p{margin:0;color:var(--mut)}
+#tab-about .card:first-of-type{background:linear-gradient(145deg,rgba(124,58,237,.065),var(--card) 55%)}
 h2{font-size:18px;display:flex;align-items:center;gap:9px}
 h2::before{content:"";width:4px;height:18px;border-radius:2px;background:linear-gradient(var(--acc),#6366f1)}
 button{transition:transform .12s,filter .12s}button:hover{transform:translateY(-1px)}
@@ -101,11 +126,20 @@ textarea:focus,select:focus{outline:2px solid var(--acc);outline-offset:1px}
 .bs u{display:inline-block;width:52px;height:6px;border-radius:3px;background:var(--bd);text-decoration:none;overflow:hidden}
 .bs s{display:block;height:100%;background:var(--mut);text-decoration:none}.bs.ts s{background:var(--c)}
 @media (max-width:560px){.hero h1{font-size:30px}.msg{max-width:96%}.gauge{width:150px}}
-@media (max-width:700px){
-  .wrap{padding-bottom:calc(88px + env(safe-area-inset-bottom,0px))}
-  .result-nav{position:fixed;top:auto;bottom:0;left:0;right:0;gap:2px;margin:0;padding:6px 6px calc(6px + env(safe-area-inset-bottom,0px));border-radius:14px 14px 0 0;box-shadow:0 -4px 18px rgba(2,6,23,.16)}
-  .result-nav button{min-height:44px;padding:6px 2px;font-size:12px}
+@media (max-width:1239px){
+  .wrap{padding-right:36px}
+  .result-nav{right:6px;gap:0;width:44px;padding:0;background:transparent;border:0;border-radius:0;box-shadow:none}
+  .result-nav a{justify-content:center;width:44px;min-height:44px;padding:0;border:0}
+  .result-nav a:hover{border:0}
+  .result-nav a[aria-current="true"]{background:transparent;box-shadow:none}
+  .nav-icon{width:10px;height:10px;border:1px solid var(--mut);background:var(--card);font-size:0}
+  .result-nav a[aria-current="true"] .nav-icon{border-color:#4f46e5;background:#4f46e5}
+  .result-nav a.disabled .nav-icon,.result-nav a[aria-disabled="true"] .nav-icon{border-color:var(--mut);background:var(--mut)}
+  .nav-label{display:none;position:absolute;right:38px;top:50%;transform:translateY(-50%);padding:4px 9px;border:1px solid color-mix(in srgb,var(--panel-accent) 35%,var(--bd));border-radius:99px;background:var(--card);box-shadow:0 2px 8px rgba(2,6,23,.14);white-space:nowrap;color:var(--fg);font-size:12px}
+  .result-nav a[aria-current="true"] .nav-label{color:var(--panel-accent)}
+  .result-nav a[aria-current="true"] .nav-label{display:block}
 }
+@media (prefers-reduced-motion:reduce){html{scroll-behavior:auto}}
 </style>
 <style>
 .demo{display:flex;flex-direction:column;align-items:flex-start;text-align:left;gap:2px;padding:12px 16px;flex:1 1 220px}
@@ -139,15 +173,15 @@ ol{padding-left:20px;margin:6px 0 0;font-size:14px}
   <span class="pill">Runs in your browser. Nothing is uploaded.</span>
 </header>
 
-<nav class="result-nav" id="result-nav" role="tablist" aria-label="TraceShield sections">
-  <button type="button" id="tab-analyze-button" role="tab" aria-controls="tab-analyze" aria-selected="true" tabindex="0" data-tab="analyze">Analyze</button>
-  <button type="button" id="tab-results-button" role="tab" aria-controls="tab-results" aria-selected="false" tabindex="-1" data-tab="results">Results</button>
-  <button type="button" id="tab-report-button" role="tab" aria-controls="tab-report" aria-selected="false" tabindex="-1" data-tab="report">Report</button>
-  <button type="button" id="tab-safety-button" role="tab" aria-controls="tab-safety" aria-selected="false" tabindex="-1" data-tab="safety">Safety</button>
-  <button type="button" id="tab-about-button" role="tab" aria-controls="tab-about" aria-selected="false" tabindex="-1" data-tab="about">About</button>
+<nav aria-label="Page sections" id="result-nav" class="result-nav">
+  <a href="#tab-analyze" aria-current="true"><span class="nav-icon">1</span><span class="nav-label">Analyze</span></a>
+  <a href="#tab-results" class="disabled" aria-disabled="true" title="Run an analysis first"><span class="nav-icon">2</span><span class="nav-label">Results</span></a>
+  <a href="#tab-report" class="disabled" aria-disabled="true" title="Run an analysis first"><span class="nav-icon">3</span><span class="nav-label">Report</span></a>
+  <a href="#tab-safety"><span class="nav-icon">4</span><span class="nav-label">Safety</span></a>
+  <a href="#tab-about"><span class="nav-icon">5</span><span class="nav-label">About</span></a>
 </nav>
 
-<section class="tab-panel" id="tab-analyze" role="tabpanel" aria-labelledby="tab-analyze-button">
+<section class="tab-panel" id="tab-analyze">
 <section class="card">
   <h2>1. Add a conversation</h2>
   <div class="mut">Try an example, or paste your own conversation below.</div><div class="row ex"><button class="demo" id="d1"><b>⚠ Escalating harassment</b><span>9 messages, English and Hinglish</span></button><button class="demo" id="d2"><b>✓ Friendly chat</b><span>5 messages, should stay Low</span></button></div><textarea id="inp" placeholder="Paste messages, one per line:&#10;[2026-10-28 18:05] Rahul: hey, free this weekend?&#10;[2026-10-28 18:40] Priya: I need some time. Please stop messaging me."></textarea>
@@ -180,7 +214,7 @@ ol{padding-left:20px;margin:6px 0 0;font-size:14px}
 </details>
 </section>
 
-<section class="tab-panel" id="tab-results" role="tabpanel" aria-labelledby="tab-results-button" hidden>
+<section class="tab-panel" id="tab-results">
 <div id="res" hidden>
 <section class="card" id="sum"></section>
 <section class="card" id="why-card"><h2>Why this was flagged</h2><div id="why"></div></section>
@@ -202,13 +236,13 @@ ol{padding-left:20px;margin:6px 0 0;font-size:14px}
 </div>
 </section>
 
-<section class="tab-panel" id="tab-report" role="tabpanel" aria-labelledby="tab-report-button" hidden>
+<section class="tab-panel" id="tab-report">
 <section class="card" id="report-card" hidden><h2>Evidence report</h2>
   <div class="row" style="margin:0 0 12px"><button class="p" id="prt">Print / Save as PDF</button><span class="mut">Prints only the report below.</span></div>
   <div id="report"></div></section>
 </section>
 
-<section class="tab-panel" id="tab-safety" role="tabpanel" aria-labelledby="tab-safety-button" hidden>
+<section class="tab-panel" id="tab-safety">
   <section class="card"><h2>Safety guidance</h2>
     <ul>
       <li>Do not delete concerning messages. Keep the original conversation and note relevant dates.</li>
@@ -220,7 +254,8 @@ ol{padding-left:20px;margin:6px 0 0;font-size:14px}
   </section>
 </section>
 
-<section class="tab-panel" id="tab-about" role="tabpanel" aria-labelledby="tab-about-button" hidden>
+<section class="tab-panel" id="tab-about">
+  <div class="section-intro"><span class="eyebrow">ABOUT TRACESHIELD</span><h2>Understand the signals. Keep the context.</h2><p>A transparent guide to what the score means, and what it cannot tell you.</p></div>
   <section class="card"><h2>How the score is computed</h2>
     <p>The heuristic adds points for five signals: repeated contact after a refusal (+2 when there are at least 3 messages), night-time messages (+1 when more than 30% are between 00:00 and 04:59), an increasing severity trend (+1), surveillance-type remarks (+2), and threats (+3). The maximum possible total is 9 points.</p>
     <p>Scores of 0–2 are Low, 3–4 are Elevated, and 5 or more are High. These thresholds organize patterns for review; they are not probabilities.</p>
@@ -501,37 +536,106 @@ $('clr').onclick=async()=>{cancelReplay();await replayAnalysis;$('inp').value=''
 $('file').onchange=async e=>{const f=e.target.files[0];if(!f)return;try{const msgs=load(parseIG(JSON.parse(await f.text())));if(!msgs.length)throw 0;$('inp').value=msgs.map(m=>`[${m.ts.getFullYear()}-${String(m.ts.getMonth()+1).padStart(2,'0')}-${String(m.ts.getDate()).padStart(2,'0')} ${String(m.ts.getHours()).padStart(2,'0')}:${String(m.ts.getMinutes()).padStart(2,'0')}] ${m.sender}: ${m.text.replace(/\n/g,' ')}`).join('\n');run()}catch(x){alert('Could not read that file. Use a message_1.json from the Instagram export.')}};
 </script>
 <script>
-const tabs=[...document.querySelectorAll('#result-nav [role="tab"]')];
-const panels=tabs.map(tab=>document.getElementById(tab.getAttribute('aria-controls')));
-function activateTab(name,focus){
- const index=tabs.findIndex(tab=>tab.dataset.tab===name);
- if(index<0)return;
- tabs.forEach((tab,i)=>{const active=i===index;tab.setAttribute('aria-selected',String(active));tab.tabIndex=active?0:-1;panels[i].hidden=!active});
- if(focus)tabs[index].focus();
-}
-tabs.forEach(tab=>tab.addEventListener('click',()=>activateTab(tab.dataset.tab,false)));
-document.getElementById('result-nav').addEventListener('keydown',event=>{
- const current=tabs.indexOf(document.activeElement);
- let next=current;
- if(event.key==='ArrowRight')next=(current+1)%tabs.length;
- else if(event.key==='ArrowLeft')next=(current-1+tabs.length)%tabs.length;
- else if(event.key==='Home')next=0;
- else if(event.key==='End')next=tabs.length-1;
- else return;
- event.preventDefault();
- activateTab(tabs[next].dataset.tab,true);
-});
-let pendingResultsTab=false;
-document.addEventListener('click',event=>{
- const button=event.target.closest('button');
- if(button&&['go','d1','d2'].includes(button.id))pendingResultsTab=true;
-},true);
 const report=document.getElementById('report');
 new MutationObserver(()=>{
  if(!report.textContent.trim())return;
  document.getElementById('report-card').hidden=false;
- if(pendingResultsTab){pendingResultsTab=false;activateTab('results',false)}
 }).observe(report,{childList:true,subtree:true});
+const navLinks=[...document.querySelectorAll('#result-nav a')];
+const resultsLink=document.querySelector('#result-nav a[href="#tab-results"]');
+const reportLink=document.querySelector('#result-nav a[href="#tab-report"]');
+const results=document.getElementById('res');
+const reportCard=document.getElementById('report-card');
+const sum=document.getElementById('sum');
+const sections=navLinks.map(link=>document.querySelector(link.hash));
+const analyzeSection=document.getElementById('tab-analyze');
+function setDisabled(link,disabled){
+ link.classList.toggle('disabled',disabled);
+ if(disabled){link.setAttribute('aria-disabled','true');link.title='Run an analysis first'}
+ else{link.removeAttribute('aria-disabled');link.removeAttribute('title')}
+}
+function updateNavAvailability(){
+ setDisabled(resultsLink,results.hidden);
+ setDisabled(reportLink,reportCard.hidden);
+}
+const availabilityObserver=new MutationObserver(updateNavAvailability);
+availabilityObserver.observe(results,{attributes:true,attributeFilter:['hidden']});
+availabilityObserver.observe(reportCard,{attributes:true,attributeFilter:['hidden']});
+function sectionIsVisible(section){
+ if(section.hidden||getComputedStyle(section).display==='none')return false;
+ if(section.id==='tab-results'&&results.hidden)return false;
+ if(section.id==='tab-report'&&reportCard.hidden)return false;
+ return true;
+}
+function setCurrentSection(section){
+ if(!section)return;
+ navLinks.forEach(link=>{
+  if(link.hash==='#'+section.id)link.setAttribute('aria-current','true');
+  else link.removeAttribute('aria-current');
+ });
+}
+function reducedMotion(){return window.matchMedia('(prefers-reduced-motion: reduce)').matches}
+function scrollToAnalyze(){
+ analyzeSection.scrollIntoView({behavior:reducedMotion()?'instant':'smooth',block:'start'});
+}
+navLinks.forEach(link=>link.addEventListener('click',event=>{
+ scrollspyPausedUntil=Date.now()+600;
+ if(link.getAttribute('aria-disabled')==='true'){
+  event.preventDefault();
+  scrollToAnalyze();
+ }
+ clearTimeout(scrollspyResumeTimer);
+ scrollspyResumeTimer=setTimeout(syncScrollspy,600);
+}));
+let scrollspyPausedUntil=0,scrollspyResumeTimer=null;
+function syncScrollspy(){
+ if(Date.now()<scrollspyPausedUntil)return;
+ if(window.scrollY+window.innerHeight>=document.documentElement.scrollHeight-2){
+  setCurrentSection(sections[sections.length-1]);
+  return;
+ }
+ const bandTop=window.innerHeight*.35,bandBottom=window.innerHeight*.45;
+ const current=sections.find(section=>{
+  if(!sectionIsVisible(section))return false;
+  const rect=section.getBoundingClientRect();
+  return rect.top<bandBottom&&rect.bottom>bandTop;
+ });
+ if(current)setCurrentSection(current);
+}
+const scrollspyObserver=new IntersectionObserver(entries=>{
+ if(Date.now()<scrollspyPausedUntil)return;
+ if(window.scrollY+window.innerHeight>=document.documentElement.scrollHeight-2){
+  setCurrentSection(sections[sections.length-1]);
+  return;
+ }
+ const visible=entries.filter(entry=>entry.isIntersecting&&sectionIsVisible(entry.target));
+ if(visible.length){
+  visible.sort((a,b)=>a.boundingClientRect.top-b.boundingClientRect.top);
+  setCurrentSection(visible[0].target);
+ }
+},{rootMargin:'-35% 0px -55% 0px'});
+sections.forEach(section=>scrollspyObserver.observe(section));
+let pendingAnalysisScroll=false,analysisScrollTimer=null;
+function queueAnalysisScroll(){
+ pendingAnalysisScroll=true;
+ clearTimeout(analysisScrollTimer);
+ analysisScrollTimer=setTimeout(()=>{pendingAnalysisScroll=false},15000);
+}
+document.addEventListener('click',event=>{
+ if(event.target.closest('#go,#d1,#d2'))queueAnalysisScroll();
+},true);
+document.getElementById('file').addEventListener('change',queueAnalysisScroll,true);
+new MutationObserver(()=>{
+ if(!pendingAnalysisScroll||!sum.innerHTML.trim())return;
+ pendingAnalysisScroll=false;
+ clearTimeout(analysisScrollTimer);
+ sum.scrollIntoView({behavior:reducedMotion()?'instant':'smooth',block:'start'});
+}).observe(sum,{childList:true});
+document.getElementById('clr').addEventListener('click',()=>{
+ requestAnimationFrame(()=>window.scrollTo({top:0,behavior:reducedMotion()?'instant':'smooth'}));
+});
+updateNavAvailability();
+syncScrollspy();
 </script>
 </body>
 </html>
